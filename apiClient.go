@@ -104,9 +104,16 @@ func (c *apiClient) ProjectVulnerabilities(ctx context.Context, orgID, projectID
 
 	defer response.Body.Close()
 
-	err = json.NewDecoder(response.Body).Decode(pIssues)
+	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Fatal().Msgf("Failed retrieving vulnerabilities from snyk")
+		log.Info().Msgf(err.Error())
+		log.Fatal().Msgf("Error reading body of snyk response")
+	}
+
+	err = json.Unmarshal(bodyBytes, &pIssues)
+	if err != nil {
+		log.Info().Msgf(err.Error())
+		log.Fatal().Msgf("Failed unmarshalling snyk response body")
 	}
 
 	return pIssues.Issues.Vulnerabilities, nil
