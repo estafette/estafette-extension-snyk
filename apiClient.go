@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,12 +16,13 @@ import (
 	"github.com/sethgrid/pester"
 )
 
-type ApiClient interface {
-	GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error)
+type SnykApiClient interface {
+	OrganizationProjects(ctx context.Context, orgID string) (Projects, error)
+	ProjectVulnerabilities(ctx context.Context, orgID, projectID string, filters *projectFilters) (Vulnerabilities, error)
 }
 
-// NewApiClient returns a new ApiClient
-func NewApiClient(apiToken string) ApiClient {
+//NewApiClient returns a new SnykApiClient
+func NewApiClient(apiToken string) SnykApiClient {
 	return &apiClient{
 		apiBaseURL: "https://snyk.io/api/v1/",
 		apiToken:   apiToken,
@@ -32,51 +34,93 @@ type apiClient struct {
 	apiToken   string
 }
 
-func (c *apiClient) GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error) {
+func (c *apiClient) OrganizationProjects(ctx context.Context, orgID string) (Projects, error) {
 
-	getStatusURL := fmt.Sprintf("%v/...", c.apiBaseURL)
+	var wrapper struct {
+		Projects `json:"projects"`
+	}
+
+	organizationProjectsURL := fmt.Sprintf("%v/org/%s/projects", c.apiBaseURL, orgID)
 
 	headers := map[string]string{
-		"Content-Type": "application/json",
+		"Authorization": fmt.Sprintf("token %s", c.apiToken),
+		"Content-Type":  "application/json",
 	}
 
-	responseBody, err := c.getRequest(getStatusURL, nil, headers)
+	response, err := c.getRequest(organizationProjectsURL, nil, headers, 200)
 	if err != nil {
-		log.Error().Err(err).Str("url", getStatusURL).Msgf("Failed retrieving snyk status")
-		return
+		log.Fatal().Msgf("Failed retrieving projects from snyk")
 	}
 
-	var statusResponse struct {
-		Status string `json:"status"`
+	defer response.Body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Info().Msgf(err.Error())
+		log.Fatal().Msgf("Error reading body of snyk response")
 	}
 
 	// unmarshal json body
-	err = json.Unmarshal(responseBody, &statusResponse)
+	err = json.Unmarshal(bodyBytes, &wrapper)
 	if err != nil {
-		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getStatusURL).Msgf("Failed unmarshalling snyk status response")
-		return
+		log.Info().Msgf(err.Error())
+		log.Fatal().Msgf("Failed unmarshalling snyk response body")
 	}
 
-	return statusResponse.Status, nil
+	return wrapper.Projects, nil
+
 }
 
-func (c *apiClient) getRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *apiClient) ProjectVulnerabilities(ctx context.Context, orgID, projectID string, filters *projectFilters) (Vulnerabilities, error) {
+	pIssues := &projectIssuesWrapper{}
+
+	if filters == nil {
+		filters = defaultFilters()
+	}
+
+	data := struct {
+		Filters *projectFilters `json:"filters"`
+	}{
+		filters,
+	}
+
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	body := bytes.NewReader(jsonBytes)
+
+	projectVulnerabilitiesURL := fmt.Sprintf("%v/org/%s/project/%s/issues", c.apiBaseURL, orgID, projectID)
+
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("token %s", c.apiToken),
+		"Content-Type":  "application/json",
+	}
+
+	response, err := c.postRequest(projectVulnerabilitiesURL, body, headers, 200)
+	if err != nil {
+		log.Fatal().Msgf("Failed retrieving vulnerabilities from snyk")
+	}
+
+	defer response.Body.Close()
+
+	err = json.NewDecoder(response.Body).Decode(pIssues)
+	if err != nil {
+		log.Fatal().Msgf("Failed retrieving vulnerabilities from snyk")
+	}
+
+	return pIssues.Issues.Vulnerabilities, nil
+}
+
+func (c *apiClient) getRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (resp *http.Response, err error) {
 	return c.makeRequest("GET", uri, requestBody, headers, allowedStatusCodes...)
 }
 
-func (c *apiClient) postRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *apiClient) postRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (resp *http.Response, err error) {
 	return c.makeRequest("POST", uri, requestBody, headers, allowedStatusCodes...)
 }
 
-func (c *apiClient) putRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
-	return c.makeRequest("PUT", uri, requestBody, headers, allowedStatusCodes...)
-}
-
-func (c *apiClient) deleteRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
-	return c.makeRequest("DELETE", uri, requestBody, headers, allowedStatusCodes...)
-}
-
-func (c *apiClient) makeRequest(method, uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *apiClient) makeRequest(method, uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (resp *http.Response, err error) {
 
 	// create client, in order to add headers
 	client := pester.NewExtendedClient(&http.Client{Transport: &nethttp.Transport{}})
@@ -107,7 +151,6 @@ func (c *apiClient) makeRequest(method, uri string, requestBody io.Reader, heade
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
 
 	if len(allowedStatusCodes) == 0 {
 		allowedStatusCodes = []int{http.StatusOK}
@@ -117,10 +160,5 @@ func (c *apiClient) makeRequest(method, uri string, requestBody io.Reader, heade
 		return nil, fmt.Errorf("%v %v responded with status code %v", method, uri, response.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
-
-	return body, nil
+	return response, nil
 }
