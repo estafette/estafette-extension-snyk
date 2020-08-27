@@ -96,6 +96,10 @@ type projectIssuesWrapper struct {
 	PackageManager  string `json:"packageManager"`
 }
 
+type projectsWrapper struct {
+	Projects `json:"projects"`
+}
+
 type projectFilters struct {
 	Severities []string `json:"severities"`
 	Types      []string `json:"types"`

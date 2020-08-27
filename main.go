@@ -71,7 +71,7 @@ func main() {
 	}
 
 	// todo use token to communicate with snyk api
-	client := NewApiClient(os.Getenv("ESTAFETTE_CREDENTIALS_SNYK_API_TOKEN"))
+	client := NewSnykAPIClient(os.Getenv("ESTAFETTE_CREDENTIALS_SNYK_API_TOKEN"))
 
 	// The Organization ID will be fixed
 	orgID := os.Getenv("ESTAFETTE_ORGANIZATION_ID")
