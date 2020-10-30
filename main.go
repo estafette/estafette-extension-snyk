@@ -3,10 +3,16 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"os"
 	"runtime"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/alecthomas/kingpin"
 	foundation "github.com/estafette/estafette-foundation"
+	"github.com/picatz/snyk"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,10 +28,13 @@ var (
 
 var (
 	// flags
-	gitSource = kingpin.Flag("git-source", "The source of the repository.").Envar("ESTAFETTE_GIT_SOURCE").Required().String()
-	gitOwner  = kingpin.Flag("git-owner", "The owner of the repository.").Envar("ESTAFETTE_GIT_OWNER").Required().String()
-	gitName   = kingpin.Flag("git-name", "The owner plus repository name.").Envar("ESTAFETTE_GIT_NAME").Required().String()
+	// gitSource = kingpin.Flag("git-source", "The source of the repository.").Envar("ESTAFETTE_GIT_SOURCE").Required().String()
+	// gitOwner  = kingpin.Flag("git-owner", "The owner of the repository.").Envar("ESTAFETTE_GIT_OWNER").Required().String()
+	// gitName   = kingpin.Flag("git-name", "The owner plus repository name.").Envar("ESTAFETTE_GIT_NAME").Required().String()
 
+	projectName      = kingpin.Flag("project-name", "Project name configured at the CI server, passed in to this trusted extension.").Envar("ESTAFETTE_PROJECT_NAME").Required().String()
+	targetScore      = kingpin.Flag("target-score", "Target score configured at the CI server, passed in to this trusted extension.").Envar("ESTAFETTE_TARGET_SCORE").Required().String()
+	organizationID   = kingpin.Flag("organization-id", "Organization ID configured at the CI server, passed in to this trusted extension.").Envar("ESTAFETTE_ORGANIZATION_ID").Required().String()
 	snykAPITokenJSON = kingpin.Flag("snyk-api-token", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Envar("ESTAFETTE_CREDENTIALS_SNYK_API_TOKEN").Required().String()
 )
 
@@ -62,12 +71,53 @@ func main() {
 	}
 
 	// todo use token to communicate with snyk api
-	apiClient := NewApiClient(snykAPIToken)
+	client := NewSnykAPIClient(os.Getenv("ESTAFETTE_CREDENTIALS_SNYK_API_TOKEN"))
 
-	status, err := apiClient.GetStatus(ctx, *gitSource, *gitOwner, *gitName)
+	// The Organization ID will be fixed
+	orgID := os.Getenv("ESTAFETTE_ORGANIZATION_ID")
+	projectName := os.Getenv("ESTAFETTE_PROJECT_NAME")
+	targetScoreStr := os.Getenv("ESTAFETTE_TARGET_SCORE")
+	targetScore, err := strconv.ParseFloat(targetScoreStr, 64)
+
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed retrieving status from Snyk API")
+		log.Fatal().Err(err).Msg("Target Score provided is not a float variable")
 	}
 
-	log.Info().Msgf("Snyk API returned status: %v", status)
+	projects, err := client.OrganizationProjects(ctx, orgID)
+
+	if err != nil {
+		log.Fatal().Msgf(err.Error())
+	}
+
+	var vulnerabilities snyk.Vulnerabilities
+
+	for _, project := range projects {
+		if strings.HasPrefix(project.Name, projectName) {
+			vulnerabilityList, err := client.ProjectVulnerabilities(ctx, orgID, project.ID, nil)
+			if err != nil {
+				log.Fatal().Msgf(err.Error())
+			}
+			vulnerabilities = append(vulnerabilities, vulnerabilityList...)
+		}
+	}
+
+	var scores []float64
+	for _, vulnerability := range vulnerabilities {
+		fmt.Println(vulnerability.CvssScore)
+		scores = append(scores, vulnerability.CvssScore)
+	}
+
+	if len(scores) == 0 {
+		log.Info().Msgf("The project %s does not have vulnerabilities", projectName)
+		return
+	}
+
+	// Sorts the vulnerabilities by score, takes the highest and reports if it is above threshold
+	sort.Float64s(scores)
+
+	if scores[len(scores)-1] >= targetScore {
+		log.Fatal().Msgf("The project %s has vulnerabilities above the current threshold of %.1f", projectName, targetScore)
+	} else {
+		log.Info().Msgf("The project %s does not have vulnerabilities above the current threshold of %.1f", projectName, targetScore)
+	}
 }
