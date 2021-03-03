@@ -77,8 +77,6 @@ func (c *client) GetProjects(ctx context.Context, organization api.Organization)
 		return
 	}
 
-	log.Debug().Str("responseBody", string(responseBody)).Msgf("GET %v", getProjectsURL)
-
 	var response struct {
 		Projects []api.Project `json:"projects"`
 	}
@@ -138,6 +136,12 @@ func (c *client) deleteRequest(uri string, requestBody io.Reader, headers map[st
 
 func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
 
+	if len(allowedStatusCodes) == 0 {
+		allowedStatusCodes = []int{http.StatusOK}
+	}
+
+	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Msgf("%v %v start", method, uri)
+
 	// create client, in order to add headers
 	client := pester.NewExtendedClient(&http.Client{Transport: &nethttp.Transport{}})
 	client.MaxRetries = 3
@@ -169,10 +173,6 @@ func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers 
 	}
 	defer response.Body.Close()
 
-	if len(allowedStatusCodes) == 0 {
-		allowedStatusCodes = []int{http.StatusOK}
-	}
-
 	if !foundation.IntArrayContains(allowedStatusCodes, response.StatusCode) {
 		return nil, fmt.Errorf("%v %v responded with status code %v", method, uri, response.StatusCode)
 	}
@@ -181,6 +181,8 @@ func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers 
 	if err != nil {
 		return
 	}
+
+	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Int("statusCode", response.StatusCode).Str("body", string(body)).Msgf("%v %v finish", method, uri)
 
 	return body, nil
 }
