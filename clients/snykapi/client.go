@@ -77,6 +77,8 @@ func (c *client) GetProjects(ctx context.Context, organization api.Organization)
 		return
 	}
 
+	log.Debug().Str("responseBody", string(responseBody)).Msgf("GET %v", getProjectsURL)
+
 	var response struct {
 		Projects []api.Project `json:"projects"`
 	}
