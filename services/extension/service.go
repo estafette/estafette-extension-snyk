@@ -50,6 +50,10 @@ func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repo
 		} else {
 			log.Info().Interface("projects", projects).Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
 		}
+
+		for _, p := range projects {
+			log.Debug().Msgf("%v", p.Name)
+		}
 	}
 
 	// // get status from snyk
