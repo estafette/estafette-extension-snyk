@@ -35,6 +35,15 @@ func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repo
 
 	log.Info().Interface("organizations", organizations).Msg("Retrieved organizations for user")
 
+	for _, org := range organizations {
+		projects, innerErr := s.snykapiClient.GetProjects(ctx, org)
+		if err != nil {
+			return innerErr
+		}
+
+		log.Info().Interface("projects", projects).Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
+	}
+
 	// // get status from snyk
 	// status, err := s.snykapiClient.GetStatus(ctx, repoSource, repoOwner, repoName)
 	// if err != nil {

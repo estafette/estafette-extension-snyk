@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/estafette/estafette-extension-snyk/api"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/rs/zerolog/log"
@@ -16,14 +17,15 @@ import (
 )
 
 type Client interface {
-	GetOrganizations(ctx context.Context) (organizations []Organization, err error)
+	GetOrganizations(ctx context.Context) (organizations []api.Organization, err error)
+	GetProjects(ctx context.Context, organization api.Organization) (projects []api.Project, err error)
 	GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error)
 }
 
 // NewClient returns a new snykapi.Client
 func NewClient(apiToken string) Client {
 	return &client{
-		apiBaseURL: "https://snyk.io/api/v1/",
+		apiBaseURL: "https://snyk.io/api/v1",
 		apiToken:   apiToken,
 	}
 }
@@ -33,22 +35,10 @@ type client struct {
 	apiToken   string
 }
 
-type Organization struct {
-	Name  string `json:"name,omitempty"`
-	ID    string `json:"id,omitempty"`
-	Slug  string `json:"slug,omitempty"`
-	URL   string `json:"url,omitempty"`
-	Group *Group `json:"group,omitempty"`
-}
+func (c *client) GetOrganizations(ctx context.Context) (organizations []api.Organization, err error) {
 
-type Group struct {
-	Name string `json:"name,omitempty"`
-	ID   string `json:"id,omitempty"`
-}
-
-func (c *client) GetOrganizations(ctx context.Context) (organizations []Organization, err error) {
-
-	getOrgsURL := fmt.Sprintf("%vorgs", c.apiBaseURL)
+	// https://snyk.docs.apiary.io/#reference/organizations/list-all-the-organizations-a-user-belongs-to
+	getOrgsURL := fmt.Sprintf("%v/orgs", c.apiBaseURL)
 
 	headers := map[string]string{
 		"Content-Type": "application/json",
@@ -60,7 +50,7 @@ func (c *client) GetOrganizations(ctx context.Context) (organizations []Organiza
 	}
 
 	var statusResponse struct {
-		Organizations []Organization `json:"orgs"`
+		Organizations []api.Organization `json:"orgs"`
 	}
 
 	// unmarshal json body
@@ -71,6 +61,34 @@ func (c *client) GetOrganizations(ctx context.Context) (organizations []Organiza
 	}
 
 	return statusResponse.Organizations, nil
+}
+
+func (c *client) GetProjects(ctx context.Context, organization api.Organization) (projects []api.Project, err error) {
+
+	// https://snyk.docs.apiary.io/#reference/projects/all-projects/list-all-projects
+	getProjectsURL := fmt.Sprintf("%v/org/%v/projects", c.apiBaseURL, organization.ID)
+
+	headers := map[string]string{
+		"Content-Type": "application/json",
+	}
+
+	responseBody, err := c.getRequest(getProjectsURL, nil, headers)
+	if err != nil {
+		return
+	}
+
+	var statusResponse struct {
+		Projects []api.Project `json:"projects"`
+	}
+
+	// unmarshal json body
+	err = json.Unmarshal(responseBody, &statusResponse)
+	if err != nil {
+		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getProjectsURL).Msgf("Failed unmarshalling snyk getProjectsURL response")
+		return
+	}
+
+	return statusResponse.Projects, nil
 }
 
 func (c *client) GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error) {
