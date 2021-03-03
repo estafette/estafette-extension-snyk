@@ -140,7 +140,7 @@ func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers 
 		allowedStatusCodes = []int{http.StatusOK}
 	}
 
-	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Msgf("%v %v start", method, uri)
+	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Msgf("%v %v | start", method, uri)
 
 	// create client, in order to add headers
 	client := pester.NewExtendedClient(&http.Client{Transport: &nethttp.Transport{}})
@@ -166,6 +166,8 @@ func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers 
 		request.Header.Add("Authorization", fmt.Sprintf("token %v", c.apiToken))
 	}
 
+	log.Debug().Msgf("%v %v | new request created", method, uri)
+
 	// perform actual request
 	response, err := client.Do(request)
 	if err != nil {
@@ -173,16 +175,20 @@ func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers 
 	}
 	defer response.Body.Close()
 
+	log.Debug().Int("statusCode", response.StatusCode).Msgf("%v %v | request done", method, uri)
+
 	if !foundation.IntArrayContains(allowedStatusCodes, response.StatusCode) {
 		return nil, fmt.Errorf("%v %v responded with status code %v", method, uri, response.StatusCode)
 	}
+
+	log.Debug().Msgf("%v %v | status code checked", method, uri)
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return
 	}
 
-	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Int("statusCode", response.StatusCode).Str("body", string(body)).Msgf("%v %v finish", method, uri)
+	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Int("statusCode", response.StatusCode).Str("body", string(body)).Msgf("%v %v | finish", method, uri)
 
 	return body, nil
 }
