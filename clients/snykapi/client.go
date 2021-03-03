@@ -16,6 +16,7 @@ import (
 )
 
 type Client interface {
+	GetOrganizations(ctx context.Context) (organizations []Organization, err error)
 	GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error)
 }
 
@@ -30,6 +31,46 @@ func NewClient(apiToken string) Client {
 type client struct {
 	apiBaseURL string
 	apiToken   string
+}
+
+type Organization struct {
+	Name  string `json:"name,omitempty"`
+	ID    string `json:"id,omitempty"`
+	Slug  string `json:"slug,omitempty"`
+	URL   string `json:"url,omitempty"`
+	Group *Group `json:"group,omitempty"`
+}
+
+type Group struct {
+	Name string `json:"name,omitempty"`
+	ID   string `json:"id,omitempty"`
+}
+
+func (c *client) GetOrganizations(ctx context.Context) (organizations []Organization, err error) {
+
+	getOrgsURL := fmt.Sprintf("%vorgs", c.apiBaseURL)
+
+	headers := map[string]string{
+		"Content-Type": "application/json",
+	}
+
+	responseBody, err := c.getRequest(getOrgsURL, nil, headers)
+	if err != nil {
+		return
+	}
+
+	var statusResponse struct {
+		Organizations []Organization `json:"orgs"`
+	}
+
+	// unmarshal json body
+	err = json.Unmarshal(responseBody, &statusResponse)
+	if err != nil {
+		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getOrgsURL).Msgf("Failed unmarshalling snyk getOrgsURL response")
+		return
+	}
+
+	return statusResponse.Organizations, nil
 }
 
 func (c *client) GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error) {

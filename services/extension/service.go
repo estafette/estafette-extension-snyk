@@ -3,9 +3,9 @@ package extension
 import (
 	"context"
 	"errors"
-	"strconv"
 
 	"github.com/estafette/estafette-extension-snyk/clients/snykapi"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -28,21 +28,28 @@ type service struct {
 
 func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repoBranch string, minimumValueToSucceed int) (err error) {
 
-	// get status from snyk
-	status, err := s.snykapiClient.GetStatus(ctx, repoSource, repoOwner, repoName)
+	organizations, err := s.snykapiClient.GetOrganizations(ctx)
 	if err != nil {
 		return
 	}
 
-	// check if status is higher than minimumValueToSucceed
-	statusInt, err := strconv.Atoi(status)
-	if err != nil {
-		return
-	}
+	log.Info().Interface("organizations", organizations).Msg("Retrieved organizations for user")
 
-	if statusInt < minimumValueToSucceed {
-		return ErrStatusTooLow
-	}
+	// // get status from snyk
+	// status, err := s.snykapiClient.GetStatus(ctx, repoSource, repoOwner, repoName)
+	// if err != nil {
+	// 	return
+	// }
+
+	// // check if status is higher than minimumValueToSucceed
+	// statusInt, err := strconv.Atoi(status)
+	// if err != nil {
+	// 	return
+	// }
+
+	// if statusInt < minimumValueToSucceed {
+	// 	return ErrStatusTooLow
+	// }
 
 	return nil
 }
