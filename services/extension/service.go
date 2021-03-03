@@ -41,7 +41,7 @@ func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repo
 		log.Info().Msgf("Fetching projects for org %v", org.Name)
 
 		projects, innerErr := s.snykapiClient.GetProjects(ctx, org)
-		if err != nil {
+		if innerErr != nil {
 			return innerErr
 		}
 
