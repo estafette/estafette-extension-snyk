@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"runtime"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/estafette/estafette-extension-snyk/clients/credentials"
+	"github.com/estafette/estafette-extension-snyk/clients/snykapi"
+	"github.com/estafette/estafette-extension-snyk/services/extension"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
 )
@@ -24,7 +26,10 @@ var (
 	// flags
 	gitSource = kingpin.Flag("git-source", "The source of the repository.").Envar("ESTAFETTE_GIT_SOURCE").Required().String()
 	gitOwner  = kingpin.Flag("git-owner", "The owner of the repository.").Envar("ESTAFETTE_GIT_OWNER").Required().String()
-	gitName   = kingpin.Flag("git-name", "The owner plus repository name.").Envar("ESTAFETTE_GIT_NAME").Required().String()
+	gitName   = kingpin.Flag("git-name", "The repository name.").Envar("ESTAFETTE_GIT_NAME").Required().String()
+	gitBranch = kingpin.Flag("git-branch", "The branch.").Envar("ESTAFETTE_GIT_BRANCH").Required().String()
+
+	minValue = kingpin.Flag("min-value", "The minimum value to get from snyk to pass the check.").Default("0").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_MIN_VALUE").Int()
 
 	snykAPITokenJSON = kingpin.Flag("snyk-api-token", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Envar("ESTAFETTE_CREDENTIALS_SNYK_API_TOKEN").Required().String()
 )
@@ -41,33 +46,17 @@ func main() {
 	ctx := foundation.InitCancellationContext(context.Background())
 
 	// get api token from injected credentials
-	snykAPIToken := ""
-	if *snykAPITokenJSON != "" {
-		log.Info().Msg("Unmarshalling injected snyk api token credentials")
-		var credentials []APITokenCredentials
-		err := json.Unmarshal([]byte(*snykAPITokenJSON), &credentials)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed unmarshalling injected snyk api token credentials")
-		}
-		if len(credentials) == 0 {
-			log.Fatal().Msg("No snyk api token credentials have been injected")
-		}
-		snykAPIToken = credentials[0].AdditionalProperties.Token
-	}
-
-	if snykAPIToken != "" {
-		log.Debug().Msg("Extracted snyk API token from credentials")
-	} else {
-		log.Fatal().Msg("Failed to extract snyk API token from credentials")
-	}
-
-	// todo use token to communicate with snyk api
-	apiClient := NewApiClient(snykAPIToken)
-
-	status, err := apiClient.GetStatus(ctx, *gitSource, *gitOwner, *gitName)
+	credentialsClient := credentials.NewClient()
+	token, err := credentialsClient.GetToken(ctx, *snykAPITokenJSON)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed retrieving status from Snyk API")
+		log.Fatal().Err(err).Msg("Failed getting snyk api token from injected credentials")
 	}
 
-	log.Info().Msgf("Snyk API returned status: %v", status)
+	snykapiClient := snykapi.NewClient(token)
+	extensionService := extension.NewService(snykapiClient)
+
+	err = extensionService.Run(ctx, *gitSource, *gitOwner, *gitName, *gitBranch, *minValue)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed running status check")
+	}
 }

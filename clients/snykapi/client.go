@@ -1,4 +1,4 @@
-package main
+package snykapi
 
 import (
 	"context"
@@ -15,24 +15,24 @@ import (
 	"github.com/sethgrid/pester"
 )
 
-type ApiClient interface {
+type Client interface {
 	GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error)
 }
 
-// NewApiClient returns a new ApiClient
-func NewApiClient(apiToken string) ApiClient {
-	return &apiClient{
+// NewClient returns a new snykapi.Client
+func NewClient(apiToken string) Client {
+	return &client{
 		apiBaseURL: "https://snyk.io/api/v1/",
 		apiToken:   apiToken,
 	}
 }
 
-type apiClient struct {
+type client struct {
 	apiBaseURL string
 	apiToken   string
 }
 
-func (c *apiClient) GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error) {
+func (c *client) GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error) {
 
 	getStatusURL := fmt.Sprintf("%v/...", c.apiBaseURL)
 
@@ -42,7 +42,6 @@ func (c *apiClient) GetStatus(ctx context.Context, repoSource, repoOwner, repoNa
 
 	responseBody, err := c.getRequest(getStatusURL, nil, headers)
 	if err != nil {
-		log.Error().Err(err).Str("url", getStatusURL).Msgf("Failed retrieving snyk status")
 		return
 	}
 
@@ -60,23 +59,23 @@ func (c *apiClient) GetStatus(ctx context.Context, repoSource, repoOwner, repoNa
 	return statusResponse.Status, nil
 }
 
-func (c *apiClient) getRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *client) getRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
 	return c.makeRequest("GET", uri, requestBody, headers, allowedStatusCodes...)
 }
 
-func (c *apiClient) postRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *client) postRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
 	return c.makeRequest("POST", uri, requestBody, headers, allowedStatusCodes...)
 }
 
-func (c *apiClient) putRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *client) putRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
 	return c.makeRequest("PUT", uri, requestBody, headers, allowedStatusCodes...)
 }
 
-func (c *apiClient) deleteRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *client) deleteRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
 	return c.makeRequest("DELETE", uri, requestBody, headers, allowedStatusCodes...)
 }
 
-func (c *apiClient) makeRequest(method, uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
+func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {
 
 	// create client, in order to add headers
 	client := pester.NewExtendedClient(&http.Client{Transport: &nethttp.Transport{}})
