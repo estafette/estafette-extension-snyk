@@ -4,16 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"runtime"
 
+	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
 )
 
 var (
-	ErrEmptyToken = errors.New("Token is empty")
+	ErrInjectedCredentialsFileMissing = errors.New("The injected credentials file is missing")
+	ErrEmptyToken                     = errors.New("Token is empty")
 )
 
 type Client interface {
-	GetToken(ctx context.Context, snykAPITokenJSON string) (token string, err error)
+	GetToken(ctx context.Context, snykAPITokenPath string) (token string, err error)
 }
 
 // NewClient returns a new credentials.Client
@@ -36,15 +40,25 @@ type APITokenCredentialsAdditionalProperties struct {
 	Token string `json:"token,omitempty"`
 }
 
-func (c *client) GetToken(ctx context.Context, snykAPITokenJSON string) (token string, err error) {
+func (c *client) GetToken(ctx context.Context, snykAPITokenPath string) (token string, err error) {
 
-	if snykAPITokenJSON == "" {
-		return token, ErrEmptyToken
+	// get api token from injected credentials
+	if runtime.GOOS == "windows" {
+		snykAPITokenPath = "C:" + snykAPITokenPath
+	}
+	if !foundation.FileExists(snykAPITokenPath) {
+		return token, ErrInjectedCredentialsFileMissing
+	}
+
+	log.Info().Msgf("Reading credentials from file at path %v...", snykAPITokenPath)
+	credentialsFileContent, err := ioutil.ReadFile(snykAPITokenPath)
+	if err != nil {
+		return
 	}
 
 	log.Info().Msg("Unmarshalling injected snyk api token credentials")
 	var credentials []APITokenCredentials
-	err = json.Unmarshal([]byte(snykAPITokenJSON), &credentials)
+	err = json.Unmarshal([]byte(credentialsFileContent), &credentials)
 	if err != nil {
 		return
 	}

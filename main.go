@@ -31,7 +31,7 @@ var (
 
 	minValue = kingpin.Flag("min-value", "The minimum value to get from snyk to pass the check.").Default("0").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_MIN_VALUE").Int()
 
-	snykAPITokenJSON = kingpin.Flag("snyk-api-token", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Envar("ESTAFETTE_CREDENTIALS_SNYK_API_TOKEN").Required().String()
+	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
 )
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 
 	// get api token from injected credentials
 	credentialsClient := credentials.NewClient()
-	token, err := credentialsClient.GetToken(ctx, *snykAPITokenJSON)
+	token, err := credentialsClient.GetToken(ctx, *snykAPITokenPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed getting snyk api token from injected credentials")
 	}
