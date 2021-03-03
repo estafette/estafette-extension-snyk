@@ -188,7 +188,11 @@ func (c *client) makeRequest(method, uri string, requestBody io.Reader, headers 
 		return nil, err
 	}
 
-	log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Int("statusCode", response.StatusCode).Str("body", string(body)).Msgf("%v %v | finish", method, uri)
+	if len(body) > 1000 {
+		log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Int("statusCode", response.StatusCode).Str("body", string(body)).Msgf("%v %v | finish", method, uri)
+	} else {
+		log.Debug().Interface("headers", headers).Interface("allowedStatusCodes", allowedStatusCodes).Int("statusCode", response.StatusCode).Msgf("%v %v | finish (body length %v)", method, uri, len(body))
+	}
 
 	return body, nil
 }

@@ -45,7 +45,11 @@ func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repo
 			return innerErr
 		}
 
-		log.Info().Interface("projects", projects).Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
+		if len(projects) > 100 {
+			log.Info().Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
+		} else {
+			log.Info().Interface("projects", projects).Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
+		}
 	}
 
 	// // get status from snyk
