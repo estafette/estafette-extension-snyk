@@ -49,18 +49,18 @@ func (c *client) GetOrganizations(ctx context.Context) (organizations []api.Orga
 		return
 	}
 
-	var statusResponse struct {
+	var response struct {
 		Organizations []api.Organization `json:"orgs"`
 	}
 
 	// unmarshal json body
-	err = json.Unmarshal(responseBody, &statusResponse)
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getOrgsURL).Msgf("Failed unmarshalling snyk getOrgsURL response")
 		return
 	}
 
-	return statusResponse.Organizations, nil
+	return response.Organizations, nil
 }
 
 func (c *client) GetProjects(ctx context.Context, organization api.Organization) (projects []api.Project, err error) {
@@ -77,18 +77,18 @@ func (c *client) GetProjects(ctx context.Context, organization api.Organization)
 		return
 	}
 
-	var statusResponse struct {
+	var response struct {
 		Projects []api.Project `json:"projects"`
 	}
 
 	// unmarshal json body
-	err = json.Unmarshal(responseBody, &statusResponse)
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getProjectsURL).Msgf("Failed unmarshalling snyk getProjectsURL response")
 		return
 	}
 
-	return statusResponse.Projects, nil
+	return response.Projects, nil
 }
 
 func (c *client) GetStatus(ctx context.Context, repoSource, repoOwner, repoName string) (status string, err error) {
@@ -104,18 +104,18 @@ func (c *client) GetStatus(ctx context.Context, repoSource, repoOwner, repoName 
 		return
 	}
 
-	var statusResponse struct {
+	var response struct {
 		Status string `json:"status"`
 	}
 
 	// unmarshal json body
-	err = json.Unmarshal(responseBody, &statusResponse)
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getStatusURL).Msgf("Failed unmarshalling snyk status response")
 		return
 	}
 
-	return statusResponse.Status, nil
+	return response.Status, nil
 }
 
 func (c *client) getRequest(uri string, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {

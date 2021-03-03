@@ -28,14 +28,18 @@ type service struct {
 
 func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repoBranch string, minimumValueToSucceed int) (err error) {
 
+	log.Info().Msg("Fetching organizations for user")
+
 	organizations, err := s.snykapiClient.GetOrganizations(ctx)
 	if err != nil {
 		return
 	}
 
-	log.Info().Interface("organizations", organizations).Msg("Retrieved organizations for user")
+	log.Info().Interface("organizations", organizations).Msgf("Retrieved %v organizations for user", len(organizations))
 
 	for _, org := range organizations {
+		log.Info().Msgf("Fetching projects for org %v", org.Name)
+
 		projects, innerErr := s.snykapiClient.GetProjects(ctx, org)
 		if err != nil {
 			return innerErr
