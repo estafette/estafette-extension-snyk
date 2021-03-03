@@ -32,11 +32,11 @@ type Project struct {
 	LastTestedDate        string           `json:"lastTestedDate,omitempty"`
 	TotalDependencies     int              `json:"totalDependencies,omitempty"`
 	IssueCountsBySeverity map[Severity]int `json:"issueCountsBySeverity,omitempty"`
+	Origin                string           `json:"origin,omitempty"`
+	Type                  string           `json:"type,omitempty"`
 
 	// {
 	// 	"created": "2018-10-29T09:50:54.014Z",
-	// 	"origin": "cli",
-	// 	"type": "npm",
 	// 	"readOnly": false,
 	// 	"testFrequency": "daily",
 	// 	"totalDependencies": 438,

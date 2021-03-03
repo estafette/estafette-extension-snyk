@@ -52,7 +52,7 @@ func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repo
 		}
 
 		for _, p := range projects {
-			log.Debug().Msgf("%v", p.Name)
+			log.Debug().Str("origin", p.Origin).Str("type", p.Type).Msgf("%v", p.Name)
 		}
 	}
 
