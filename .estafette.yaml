@@ -31,7 +31,7 @@ stages:
       RUN npm install -g snyk \
           && which snyk
 
-      FROM scratch
+      FROM node:15-alpine
 
       LABEL maintainer="estafette.io"
 
