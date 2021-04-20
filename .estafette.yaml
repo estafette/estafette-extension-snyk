@@ -26,7 +26,17 @@ stages:
     action: build
     container: snyk
     inline: |
-      FROM node:15-buster
+      FROM alpine:3.13
+
+      # install golang
+      RUN apk add --no-cache git go # make musl-dev
+
+      # install node
+      RUN apk add --update nodejs npm
+
+      # install .net core
+
+      # install java
 
       LABEL maintainer="estafette.io"
 
