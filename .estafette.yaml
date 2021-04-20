@@ -29,12 +29,14 @@ stages:
       FROM alpine:3.13
 
       # install golang
-      RUN apk add --no-cache git go # make musl-dev
+      RUN apk add --no-cache git go
 
       # install node
       RUN apk add --update nodejs npm
 
       # install .net core
+      RUN apk add --no-cache curl \
+          && curl -L https://dot.net/v1/dotnet-install.sh -c Current | sh
 
       # install java
 
