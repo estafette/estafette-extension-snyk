@@ -29,7 +29,8 @@ var (
 	gitName   = kingpin.Flag("git-name", "The repository name.").Envar("ESTAFETTE_GIT_NAME").Required().String()
 	gitBranch = kingpin.Flag("git-branch", "The branch.").Envar("ESTAFETTE_GIT_BRANCH").Required().String()
 
-	minValue = kingpin.Flag("min-value", "The minimum value to get from snyk to pass the check.").Default("0").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_MIN_VALUE").Int()
+	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").String()
+	failOn            = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").String()
 
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
 )
@@ -55,7 +56,7 @@ func main() {
 	snykcliClient := snykcli.NewClient(token)
 	extensionService := extension.NewService(snykcliClient)
 
-	err = extensionService.Run(ctx, *gitSource, *gitOwner, *gitName, *gitBranch, *minValue)
+	err = extensionService.Run(ctx, *severityThreshold, *failOn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running status check")
 	}

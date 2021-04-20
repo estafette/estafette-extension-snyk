@@ -8,7 +8,7 @@ import (
 
 type Client interface {
 	Auth(ctx context.Context) (err error)
-	Test(ctx context.Context) (err error)
+	Test(ctx context.Context, severityThreshold, failOn string) (err error)
 }
 
 // NewClient returns a new snykapi.Client
@@ -32,9 +32,9 @@ func (c *client) Auth(ctx context.Context) (err error) {
 	return
 }
 
-func (c *client) Test(ctx context.Context) (err error) {
+func (c *client) Test(ctx context.Context, severityThreshold, failOn string) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	err = foundation.RunCommandExtended(ctx, "snyk test")
+	err = foundation.RunCommandExtended(ctx, "snyk test --severity-threshold=%v --fail-on=%v", severityThreshold, failOn)
 	if err != nil {
 		return
 	}
