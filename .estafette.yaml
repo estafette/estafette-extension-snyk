@@ -26,7 +26,7 @@ stages:
     action: build
     container: snyk
     inline: |
-      FROM node:15-alpine
+      FROM node:15-buster
 
       LABEL maintainer="estafette.io"
 
