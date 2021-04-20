@@ -35,8 +35,8 @@ stages:
       RUN apk add --update nodejs npm
 
       # install .net core
-      RUN apk add --no-cache curl \
-          && curl -L https://dot.net/v1/dotnet-install.sh -c Current | sh
+      RUN apk add --no-cache curl bash \
+          && curl -L https://dot.net/v1/dotnet-install.sh | bash
 
       # install java
 
