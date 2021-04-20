@@ -35,7 +35,7 @@ stages:
 
       LABEL maintainer="estafette.io"
 
-      COPY --from=builder /usr/bin/snyk /usr/bin/snyk
+      COPY --from=builder /usr/local/bin/snyk /usr/local/bin/snyk
       COPY ${ESTAFETTE_GIT_NAME} /
       COPY ca-certificates.crt /etc/ssl/certs/
 
