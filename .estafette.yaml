@@ -26,16 +26,12 @@ stages:
     action: build
     container: snyk
     inline: |
-      FROM node:15-alpine AS builder
-
-      RUN npm install -g snyk \
-          && which snyk
-
       FROM node:15-alpine
 
       LABEL maintainer="estafette.io"
 
-      COPY --from=builder /usr/local/bin/snyk /usr/local/bin/snyk
+      RUN npm install -g snyk
+
       COPY ${ESTAFETTE_GIT_NAME} /
       COPY ca-certificates.crt /etc/ssl/certs/
 
