@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/estafette/estafette-extension-snyk/clients/snykapi"
-	"github.com/rs/zerolog/log"
+	"github.com/estafette/estafette-extension-snyk/clients/snykcli"
 )
 
 var (
@@ -16,48 +15,58 @@ type Service interface {
 	Run(ctx context.Context, repoSource, repoOwner, repoName, repoBranch string, minimumValueToSucceed int) (err error)
 }
 
-func NewService(snykapiClient snykapi.Client) Service {
+func NewService(snykcliClient snykcli.Client) Service {
 	return &service{
-		snykapiClient: snykapiClient,
+		snykcliClient: snykcliClient,
 	}
 }
 
 type service struct {
-	snykapiClient snykapi.Client
+	snykcliClient snykcli.Client
 }
 
 func (s *service) Run(ctx context.Context, repoSource, repoOwner, repoName, repoBranch string, minimumValueToSucceed int) (err error) {
 
-	log.Info().Msg("Fetching organizations for user")
-
-	organizations, err := s.snykapiClient.GetOrganizations(ctx)
+	err = s.snykcliClient.Auth(ctx)
 	if err != nil {
 		return
 	}
 
-	log.Info().Interface("organizations", organizations).Msgf("Retrieved %v organizations for user", len(organizations))
-
-	for _, org := range organizations {
-		log.Info().Msgf("Fetching projects for org %v", org.Name)
-
-		projects, innerErr := s.snykapiClient.GetProjects(ctx, org)
-		if innerErr != nil {
-			return innerErr
-		}
-
-		if len(projects) > 100 {
-			log.Info().Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
-		} else {
-			log.Info().Interface("projects", projects).Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
-		}
-
-		for _, p := range projects {
-			log.Debug().Str("origin", p.Origin).Str("type", p.Type).Str("branch", p.Branch).Msg(p.Name)
-		}
+	err = s.snykcliClient.Test(ctx)
+	if err != nil {
+		return
 	}
 
+	// log.Info().Msg("Fetching organizations for user")
+
+	// organizations, err := s.snykcliClient.GetOrganizations(ctx)
+	// if err != nil {
+	// 	return
+	// }
+
+	// log.Info().Interface("organizations", organizations).Msgf("Retrieved %v organizations for user", len(organizations))
+
+	// for _, org := range organizations {
+	// 	log.Info().Msgf("Fetching projects for org %v", org.Name)
+
+	// 	projects, innerErr := s.snykcliClient.GetProjects(ctx, org)
+	// 	if innerErr != nil {
+	// 		return innerErr
+	// 	}
+
+	// 	if len(projects) > 100 {
+	// 		log.Info().Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
+	// 	} else {
+	// 		log.Info().Interface("projects", projects).Msgf("Retrieved %v projects for org %v", len(projects), org.Name)
+	// 	}
+
+	// 	for _, p := range projects {
+	// 		log.Debug().Str("origin", p.Origin).Str("type", p.Type).Str("branch", p.Branch).Msg(p.Name)
+	// 	}
+	// }
+
 	// // get status from snyk
-	// status, err := s.snykapiClient.GetStatus(ctx, repoSource, repoOwner, repoName)
+	// status, err := s.snykcliClient.GetStatus(ctx, repoSource, repoOwner, repoName)
 	// if err != nil {
 	// 	return
 	// }

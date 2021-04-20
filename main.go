@@ -6,7 +6,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/clients/credentials"
-	"github.com/estafette/estafette-extension-snyk/clients/snykapi"
+	"github.com/estafette/estafette-extension-snyk/clients/snykcli"
 	"github.com/estafette/estafette-extension-snyk/services/extension"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
@@ -52,8 +52,8 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed getting snyk api token from injected credentials")
 	}
 
-	snykapiClient := snykapi.NewClient(token)
-	extensionService := extension.NewService(snykapiClient)
+	snykcliClient := snykcli.NewClient(token)
+	extensionService := extension.NewService(snykcliClient)
 
 	err = extensionService.Run(ctx, *gitSource, *gitOwner, *gitName, *gitBranch, *minValue)
 	if err != nil {
