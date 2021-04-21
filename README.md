@@ -1,19 +1,21 @@
 # extensions/snyk
 
-This Estafette extension checks with Snyk API whether the running pipeline repository has any known vulnerabilities
+This Estafette extension checks whether the running pipeline repository has any known vulnerabilities leveraging the Snyk CLI.
 
 ## Parameters
 
-| Parameter         | Type     | Values |
-| ----------------- | -------- | ------ |
-| `param1`          | string   | Document what this parameter does |
+| Parameter           | Description                                                 | Allowed values                   | Default value |
+| ------------------- | ----------------------------------------------------------- | -------------------------------- | --------------|
+| `severityThreshold` | Only report vulnerabilities of provided level or higher.    | `low`, `medium`, `high`          | `high`        |
+| `failOn`            | Only fail when there are vulnerabilities that can be fixed. | `all`, `upgradable`, `patchable` | `all`         |
+| `file`              | Sets a package file.                                        | string                           |               |
 
 ## Usage
 
 In order to use this extension in your `.estafette.yaml` manifest for the various supported actions use the following snippets:
 
 ```yaml
-check-snyk-for-vulernabilities:
+snyk-check:
   image: extensions/snyk:stable
 ```
 

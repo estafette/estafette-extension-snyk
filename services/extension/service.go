@@ -12,7 +12,7 @@ var (
 )
 
 type Service interface {
-	Run(ctx context.Context, severityThreshold, failOn string) (err error)
+	Run(ctx context.Context, severityThreshold, failOn, file string) (err error)
 }
 
 func NewService(snykcliClient snykcli.Client) Service {
@@ -25,14 +25,14 @@ type service struct {
 	snykcliClient snykcli.Client
 }
 
-func (s *service) Run(ctx context.Context, severityThreshold, failOn string) (err error) {
+func (s *service) Run(ctx context.Context, severityThreshold, failOn, file string) (err error) {
 
 	err = s.snykcliClient.Auth(ctx)
 	if err != nil {
 		return
 	}
 
-	err = s.snykcliClient.Test(ctx, severityThreshold, failOn)
+	err = s.snykcliClient.Test(ctx, severityThreshold, failOn, file)
 	if err != nil {
 		return
 	}

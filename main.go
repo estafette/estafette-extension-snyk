@@ -31,6 +31,7 @@ var (
 
 	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
 	failOn            = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
+	file              = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
 
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
 )
@@ -56,7 +57,7 @@ func main() {
 	snykcliClient := snykcli.NewClient(token)
 	extensionService := extension.NewService(snykcliClient)
 
-	err = extensionService.Run(ctx, *severityThreshold, *failOn)
+	err = extensionService.Run(ctx, *severityThreshold, *failOn, *file)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running status check")
 	}
