@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"runtime"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/estafette/estafette-extension-snyk/api"
 	"github.com/estafette/estafette-extension-snyk/clients/credentials"
 	"github.com/estafette/estafette-extension-snyk/clients/snykcli"
 	"github.com/estafette/estafette-extension-snyk/services/extension"
@@ -19,20 +19,16 @@ var (
 	branch    string
 	revision  string
 	buildDate string
-	goVersion = runtime.Version()
 )
 
 var (
-	// flags
-	gitSource = kingpin.Flag("git-source", "The source of the repository.").Envar("ESTAFETTE_GIT_SOURCE").Required().String()
-	gitOwner  = kingpin.Flag("git-owner", "The owner of the repository.").Envar("ESTAFETTE_GIT_OWNER").Required().String()
-	gitName   = kingpin.Flag("git-name", "The repository name.").Envar("ESTAFETTE_GIT_NAME").Required().String()
-	gitBranch = kingpin.Flag("git-branch", "The branch.").Envar("ESTAFETTE_GIT_BRANCH").Required().String()
-
-	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
+	// parameters
 	failOn            = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
 	file              = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
+	packagesFolder    = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
+	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
 
+	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
 )
 
@@ -57,7 +53,14 @@ func main() {
 	snykcliClient := snykcli.NewClient(token)
 	extensionService := extension.NewService(snykcliClient)
 
-	err = extensionService.Run(ctx, *severityThreshold, *failOn, *file)
+	flags := api.SnykFlags{
+		FailOn:            *failOn,
+		File:              *file,
+		PackagesFolder:    *packagesFolder,
+		SeverityThreshold: *severityThreshold,
+	}
+
+	err = extensionService.Run(ctx, flags)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running status check")
 	}

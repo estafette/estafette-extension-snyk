@@ -3,12 +3,13 @@ package snykcli
 import (
 	"context"
 
+	"github.com/estafette/estafette-extension-snyk/api"
 	foundation "github.com/estafette/estafette-foundation"
 )
 
 type Client interface {
 	Auth(ctx context.Context) (err error)
-	Test(ctx context.Context, severityThreshold, failOn, file string) (err error)
+	Test(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
 // NewClient returns a new snykapi.Client
@@ -32,17 +33,20 @@ func (c *client) Auth(ctx context.Context) (err error) {
 	return
 }
 
-func (c *client) Test(ctx context.Context, severityThreshold, failOn, file string) (err error) {
+func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
 	command := "snyk test"
-	if severityThreshold != "" {
-		command += " --severity-threshold=" + severityThreshold
+	if flags.FailOn != "" {
+		command += " --fail-on=" + flags.FailOn
 	}
-	if failOn != "" {
-		command += " --fail-on=" + failOn
+	if flags.File != "" {
+		command += " --file" + flags.File
 	}
-	if file != "" {
-		command += " --file" + file
+	if flags.PackagesFolder != "" {
+		command += " --packages-folder" + flags.PackagesFolder
+	}
+	if flags.SeverityThreshold != "" {
+		command += " --severity-threshold=" + flags.SeverityThreshold
 	}
 
 	err = foundation.RunCommandExtended(ctx, command)

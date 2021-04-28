@@ -70,3 +70,10 @@ type Tag struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
+
+type SnykFlags struct {
+	FailOn            string
+	File              string
+	PackagesFolder    string
+	SeverityThreshold string
+}

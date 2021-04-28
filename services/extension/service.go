@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/estafette/estafette-extension-snyk/api"
 	"github.com/estafette/estafette-extension-snyk/clients/snykcli"
 )
 
@@ -12,7 +13,7 @@ var (
 )
 
 type Service interface {
-	Run(ctx context.Context, severityThreshold, failOn, file string) (err error)
+	Run(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
 func NewService(snykcliClient snykcli.Client) Service {
@@ -25,14 +26,14 @@ type service struct {
 	snykcliClient snykcli.Client
 }
 
-func (s *service) Run(ctx context.Context, severityThreshold, failOn, file string) (err error) {
+func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
 	err = s.snykcliClient.Auth(ctx)
 	if err != nil {
 		return
 	}
 
-	err = s.snykcliClient.Test(ctx, severityThreshold, failOn, file)
+	err = s.snykcliClient.Test(ctx, flags)
 	if err != nil {
 		return
 	}
