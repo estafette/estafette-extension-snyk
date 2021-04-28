@@ -40,10 +40,10 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 		command += " --fail-on=" + flags.FailOn
 	}
 	if flags.File != "" {
-		command += " --file" + flags.File
+		command += " --file=" + flags.File
 	}
 	if flags.PackagesFolder != "" {
-		command += " --packages-folder" + flags.PackagesFolder
+		command += " --packages-folder=" + flags.PackagesFolder
 	}
 	if flags.SeverityThreshold != "" {
 		command += " --severity-threshold=" + flags.SeverityThreshold
