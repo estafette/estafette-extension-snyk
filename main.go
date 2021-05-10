@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"regexp"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -53,6 +56,19 @@ func main() {
 	snykcliClient := snykcli.NewClient(token)
 	extensionService := extension.NewService(snykcliClient)
 
+	// check if there's a single sln file and set file argument
+	if *file == "" {
+
+		files, err := checkExt(".sln")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed getting sln files")
+		}
+		if len(files) == 1 {
+			*file = files[0]
+			log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", files[0])
+		}
+	}
+
 	flags := api.SnykFlags{
 		FailOn:            *failOn,
 		File:              *file,
@@ -64,4 +80,22 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running status check")
 	}
+}
+
+func checkExt(ext string) ([]string, error) {
+	var files []string
+	pathS, err := os.Getwd()
+	if err != nil {
+		return files, err
+	}
+	filepath.Walk(pathS, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() {
+			r, err := regexp.MatchString(ext, f.Name())
+			if err == nil && r {
+				files = append(files, f.Name())
+			}
+		}
+		return nil
+	})
+	return files, nil
 }
