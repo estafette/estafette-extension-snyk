@@ -10,8 +10,8 @@ RUN apk add --no-cache git go
 RUN apk add --update nodejs npm
 
 # install .net core
-# RUN apk add --no-cache curl bash \
-#     && curl -L https://dot.net/v1/dotnet-install.sh | bash
+RUN apk add --no-cache curl bash \
+    && curl -L https://dot.net/v1/dotnet-install.sh | bash
 
 # install java
 RUN apk add --no-cache maven
