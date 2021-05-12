@@ -65,8 +65,8 @@ func main() {
 		if len(files) == 1 {
 			*file = files[0]
 			log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", files[0])
-
-			foundation.RunCommand(ctx, "dotnet restore")
+			// restoring first, otherwise it fails (and we can't inject a stage in the mi)
+			foundation.RunCommand(ctx, "dotnet restore --packages .nuget/packages")
 		}
 	}
 
