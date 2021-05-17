@@ -17,7 +17,7 @@ LABEL maintainer="estafette.io"
 RUN npm install -g snyk
 
 COPY ${ESTAFETTE_GIT_NAME} /
-COPY ca-certificates.crt /etc/ssl/certs/
+COPY settings.xml /settings.xml
 
 ENV ESTAFETTE_LOG_FORMAT="console"
 

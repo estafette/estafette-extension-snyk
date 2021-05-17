@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"text/template"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -30,6 +34,10 @@ var (
 	file              = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
 	packagesFolder    = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
 	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
+
+	mavenMirrorUrl = kingpin.Flag("maven-mirror-url", "Maven mirror to use for fetching packages.").Envar("ESTAFETTE_EXTENSION_MAVEN_MIRROR_URL").String()
+	mavenUsername  = kingpin.Flag("maven-user", "Maven mirror username.").Envar("ESTAFETTE_EXTENSION_MAVEN_USERNAME").String()
+	mavenPassword  = kingpin.Flag("maven-user", "Maven mirror password.").Envar("ESTAFETTE_EXTENSION_MAVEN_PASSWORD").String()
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
@@ -67,6 +75,32 @@ func main() {
 			log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", files[0])
 			// restoring first, otherwise it fails (and we can't inject a stage in the mi)
 			foundation.RunCommand(ctx, "dotnet restore --packages .nuget/packages")
+		}
+	}
+
+	if *mavenMirrorUrl != "" && *mavenUsername != "" && *mavenPassword != "" {
+		foundation.RunCommand(ctx, "mkdir -p /root/.m2")
+
+		settingsTemplate, err := template.New("settings.xml").ParseFiles("/settings.xml")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed parsing settings.xml")
+		}
+
+		data := struct {
+			MirrorUrl string
+			Username  string
+			Password  string
+		}{*mavenMirrorUrl, *mavenUsername, *mavenPassword}
+
+		var renderedSettings bytes.Buffer
+		err = settingsTemplate.Execute(&renderedSettings, data)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed rendering settings.xml")
+		}
+
+		err = ioutil.WriteFile("/root/.m2/settings.xml", renderedSettings.Bytes(), 0644)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed writing settings.xml")
 		}
 	}
 

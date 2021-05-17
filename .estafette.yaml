@@ -33,7 +33,7 @@ stages:
     - extensions
     path: ./publish
     copy:
-    - /etc/ssl/certs/ca-certificates.crt
+    - settings.xml
   
   check-container:
     parallelStages:
