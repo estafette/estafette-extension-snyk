@@ -81,6 +81,8 @@ func main() {
 	if *mavenMirrorUrl != "" && *mavenUsername != "" && *mavenPassword != "" {
 		foundation.RunCommand(ctx, "mkdir -p /root/.m2")
 
+		log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", *mavenMirrorUrl, *mavenUsername, *mavenPassword)
+
 		settingsTemplate, err := template.New("settings.xml").ParseFiles("/settings.xml")
 		if err != nil {
 			log.Fatal().Err(err).Msg("Failed parsing settings.xml")
@@ -102,6 +104,8 @@ func main() {
 		if err != nil {
 			log.Fatal().Err(err).Msg("Failed writing settings.xml")
 		}
+
+		foundation.RunCommand(ctx, "cat /root/.m2/settings.xml")
 	}
 
 	flags := api.SnykFlags{
