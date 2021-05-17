@@ -1,4 +1,4 @@
-FROM alpine:3.13
+FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine
 
 # fix vulnerabilities
 RUN apk add --update binutils libjpeg-turbo
@@ -8,10 +8,6 @@ RUN apk add --no-cache git go
 
 # install node
 RUN apk add --update nodejs npm
-
-# install .net core
-RUN apk add --no-cache curl bash \
-    && curl -L https://dot.net/v1/dotnet-install.sh | bash
 
 # install java
 RUN apk add --no-cache maven
