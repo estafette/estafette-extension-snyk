@@ -106,6 +106,8 @@ func main() {
 		}
 
 		foundation.RunCommand(ctx, "cat /root/.m2/settings.xml")
+
+		foundation.RunCommand(ctx, "mvn dependency:tree -DoutputType=dot")
 	}
 
 	flags := api.SnykFlags{
