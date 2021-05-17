@@ -79,6 +79,9 @@ func main() {
 	}
 
 	if *mavenMirrorUrl != "" && *mavenUsername != "" && *mavenPassword != "" {
+
+		log.Info().Msgf("HOME: %v", os.Getenv("HOME"))
+
 		foundation.RunCommand(ctx, "mkdir -p /root/.m2")
 
 		log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", *mavenMirrorUrl, *mavenUsername, *mavenPassword)
