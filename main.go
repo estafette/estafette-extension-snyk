@@ -81,7 +81,9 @@ func main() {
 		}
 	}
 
-	if *mavenMirrorUrl != "" && *mavenUsername != "" && *mavenPassword != "" {
+	if *mavenMirrorUrl != "" && *mavenUsername != "" && *mavenPassword != "" && foundation.FileExists("pom.xml") {
+
+		log.Info().Msg("Found pom.xml, initializing maven settings...")
 
 		foundation.RunCommand(ctx, "mkdir -p /root/.m2")
 
@@ -110,6 +112,7 @@ func main() {
 		}
 
 		if *mavenUpdateParent && *buildVersionMajor != "" && *buildVersionMinor != "" {
+			log.Info().Msg("Updating parent pom to latest patch version...")
 			foundation.RunCommand(ctx, "mvn -DparentVersion=[0.0.0,%v.%v.9999] versions:update-parent", *buildVersionMajor, *buildVersionMinor)
 		}
 	}
