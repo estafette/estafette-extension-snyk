@@ -165,12 +165,15 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
 			if flags.MavenUpdateParent && flags.BuildVersionMajor != "" && flags.BuildVersionMinor != "" {
 				log.Info().Msg("Updating parent pom to latest patch version...")
-				foundation.RunCommand(ctx, "mvn -DparentVersion=[0.0.0,%v.%v.9999] versions:update-parent", flags.BuildVersionMajor, flags.BuildVersionMinor)
+				foundation.RunCommand(ctx, "mvn --fail-fast --quiet --batch-mode -DparentVersion=[0.0.0,%v.%v.9999] versions:update-parent", flags.BuildVersionMajor, flags.BuildVersionMinor)
 			}
 		}
 
 	case api.LanguageDotnet:
 		foundation.RunCommand(ctx, "dotnet restore --packages .nuget/packages")
+
+	case api.LanguagePython:
+		foundation.RunCommand(ctx, "pip install -r requirements.txt")
 	}
 
 	err = s.snykcliClient.Auth(ctx)

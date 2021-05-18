@@ -1,16 +1,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine
 
 # fix vulnerabilities
-RUN apk add --update binutils libjpeg-turbo
+RUN apk add --update --no-cache binutils libjpeg-turbo
 
 # install golang
-RUN apk add --no-cache git go
+RUN apk add --update --no-cache git go
 
 # install node
-RUN apk add --update nodejs npm
+RUN apk add --update --no-cache nodejs npm
 
 # install java
-RUN apk add --no-cache maven
+RUN apk add --update --no-cache maven
+
+# install python
+RUN apk add --update --no-cache 	py3-pip
 
 LABEL maintainer="estafette.io"
 
