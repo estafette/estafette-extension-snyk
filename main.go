@@ -28,12 +28,9 @@ var (
 	packagesFolder    = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
 	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
 
-	mavenMirrorUrl    = kingpin.Flag("maven-mirror-url", "Maven mirror to use for fetching packages.").Envar("ESTAFETTE_EXTENSION_MAVEN_MIRROR_URL").String()
-	mavenUsername     = kingpin.Flag("maven-user", "Maven mirror username.").Envar("ESTAFETTE_EXTENSION_MAVEN_USERNAME").String()
-	mavenPassword     = kingpin.Flag("maven-password", "Maven mirror password.").Envar("ESTAFETTE_EXTENSION_MAVEN_PASSWORD").String()
-	mavenUpdateParent = kingpin.Flag("maven-update-parent", "Maven mirror password.").Envar("ESTAFETTE_EXTENSION_MAVEN_UPDATE_PARENT").Bool()
-	buildVersionMajor = kingpin.Flag("build-version-major", "Major part of build version semver number.").Envar("ESTAFETTE_BUILD_VERSION_MAJOR").String()
-	buildVersionMinor = kingpin.Flag("build-version-minor", "Minor part of build version semver number.").Envar("ESTAFETTE_BUILD_VERSION_MINOR").String()
+	mavenMirrorUrl = kingpin.Flag("maven-mirror-url", "Maven mirror to use for fetching packages.").Envar("ESTAFETTE_EXTENSION_MAVEN_MIRROR_URL").String()
+	mavenUsername  = kingpin.Flag("maven-user", "Maven mirror username.").Envar("ESTAFETTE_EXTENSION_MAVEN_USERNAME").String()
+	mavenPassword  = kingpin.Flag("maven-password", "Maven mirror password.").Envar("ESTAFETTE_EXTENSION_MAVEN_PASSWORD").String()
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
@@ -67,13 +64,9 @@ func main() {
 		PackagesFolder:    *packagesFolder,
 		SeverityThreshold: *severityThreshold,
 
-		MavenMirrorUrl:    *mavenMirrorUrl,
-		MavenUsername:     *mavenUsername,
-		MavenPassword:     *mavenPassword,
-		MavenUpdateParent: *mavenUpdateParent,
-
-		BuildVersionMajor: *buildVersionMajor,
-		BuildVersionMinor: *buildVersionMinor,
+		MavenMirrorUrl: *mavenMirrorUrl,
+		MavenUsername:  *mavenUsername,
+		MavenPassword:  *mavenPassword,
 	}
 
 	flags, err = extensionService.AugmentFlags(ctx, flags)
