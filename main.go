@@ -1,14 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-
-	"text/template"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -67,83 +60,29 @@ func main() {
 	snykcliClient := snykcli.NewClient(token)
 	extensionService := extension.NewService(snykcliClient)
 
-	// check if there's a single sln file and set file argument
-	if *file == "" {
-		files, err := checkExt(".sln")
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed getting sln files")
-		}
-		if len(files) == 1 {
-			*file = files[0]
-			log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", files[0])
-			// restoring first, otherwise it fails (and we can't inject a stage in the mi)
-			foundation.RunCommand(ctx, "dotnet restore --packages .nuget/packages")
-		}
-	}
-
-	if *mavenMirrorUrl != "" && *mavenUsername != "" && *mavenPassword != "" && foundation.FileExists("pom.xml") {
-
-		log.Info().Msg("Found pom.xml, initializing maven settings...")
-
-		foundation.RunCommand(ctx, "mkdir -p /root/.m2")
-
-		log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", *mavenMirrorUrl, *mavenUsername, *mavenPassword)
-
-		settingsTemplate, err := template.New("settings.xml").ParseFiles("/settings.xml")
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed parsing settings.xml")
-		}
-
-		data := struct {
-			MirrorUrl string
-			Username  string
-			Password  string
-		}{*mavenMirrorUrl, *mavenUsername, *mavenPassword}
-
-		var renderedSettings bytes.Buffer
-		err = settingsTemplate.Execute(&renderedSettings, data)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed rendering settings.xml")
-		}
-
-		err = ioutil.WriteFile("/root/.m2/settings.xml", renderedSettings.Bytes(), 0644)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed writing settings.xml")
-		}
-
-		if *mavenUpdateParent && *buildVersionMajor != "" && *buildVersionMinor != "" {
-			log.Info().Msg("Updating parent pom to latest patch version...")
-			foundation.RunCommand(ctx, "mvn -DparentVersion=[0.0.0,%v.%v.9999] versions:update-parent", *buildVersionMajor, *buildVersionMinor)
-		}
-	}
-
 	flags := api.SnykFlags{
+		Language:          api.LanguageUnknown,
 		FailOn:            *failOn,
 		File:              *file,
 		PackagesFolder:    *packagesFolder,
 		SeverityThreshold: *severityThreshold,
+
+		MavenMirrorUrl:    *mavenMirrorUrl,
+		MavenUsername:     *mavenUsername,
+		MavenPassword:     *mavenPassword,
+		MavenUpdateParent: *mavenUpdateParent,
+
+		BuildVersionMajor: *buildVersionMajor,
+		BuildVersionMinor: *buildVersionMinor,
+	}
+
+	flags, err = extensionService.AugmentFlags(ctx, flags)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed augmenting flags")
 	}
 
 	err = extensionService.Run(ctx, flags)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running status check")
 	}
-}
-
-func checkExt(ext string) ([]string, error) {
-	var files []string
-	pathS, err := os.Getwd()
-	if err != nil {
-		return files, err
-	}
-	filepath.Walk(pathS, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(ext, f.Name())
-			if err == nil && r {
-				files = append(files, f.Name())
-			}
-		}
-		return nil
-	})
-	return files, nil
 }

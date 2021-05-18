@@ -66,14 +66,33 @@ const (
 	SeverityMedium Severity = "medium"
 )
 
+type Language int
+
+const (
+	LanguageUnknown Language = iota
+	LanguageGolang
+	LanguageNode
+	LanguageMaven
+	LanguageDotnet
+)
+
 type Tag struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
 
 type SnykFlags struct {
+	Language          Language
 	FailOn            string
 	File              string
 	PackagesFolder    string
 	SeverityThreshold string
+
+	MavenMirrorUrl    string
+	MavenUsername     string
+	MavenPassword     string
+	MavenUpdateParent bool
+
+	BuildVersionMajor string
+	BuildVersionMinor string
 }
