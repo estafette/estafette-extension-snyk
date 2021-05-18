@@ -15,14 +15,15 @@ FROM mcr.microsoft.com/dotnet/sdk:5.0
 # # install python
 # RUN apk add --update --no-cache py3-pip
 
-RUN apt-get update \
+RUN mkdir -p /usr/share/man/man1 \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
       git \
       golang-go \
       nodejs \
       npm \
       maven \
-      py3-pip \
+      python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 LABEL maintainer="estafette.io"
