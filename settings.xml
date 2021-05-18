@@ -4,7 +4,7 @@
     <mirrors>
         <mirror>
             <!--This sends everything else to /public -->
-            <id>repo</id>
+            <id>nexus</id>
             <mirrorOf>*</mirrorOf>
             <url>{{.MirrorUrl}}/repository/maven-public/</url>
         </mirror>
