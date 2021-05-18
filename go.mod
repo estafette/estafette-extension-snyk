@@ -8,4 +8,5 @@ require (
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/rs/zerolog v1.19.0
 	github.com/sethgrid/pester v1.1.0
+	github.com/stretchr/testify v1.4.0
 )

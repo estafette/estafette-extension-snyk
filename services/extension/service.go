@@ -6,7 +6,6 @@ import (
 	"errors"
 	"html/template"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -20,7 +19,7 @@ var (
 )
 
 type Service interface {
-	AugmentFlags(ctx context.Context, flags api.SnykFlags) (augmentedFlags api.SnykFlags, err error)
+	AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error)
 	Run(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
@@ -34,17 +33,17 @@ type service struct {
 	snykcliClient snykcli.Client
 }
 
-func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (augmentedFlags api.SnykFlags, err error) {
+func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error) {
 
 	log.Info().Msg("Detecting language...")
 
-	augmentedFlags = flags
-	augmentedFlags.Language, err = s.detectLanguage(ctx)
+	var err error
+	flags.Language, err = s.detectLanguage(ctx)
 	if err != nil {
-		return
+		return flags, err
 	}
 
-	switch augmentedFlags.Language {
+	switch flags.Language {
 	case api.LanguageGolang:
 		log.Info().Msg("Detected golang application")
 	case api.LanguageNode:
@@ -53,22 +52,22 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (augmen
 		log.Info().Msg("Detected maven application")
 	case api.LanguageDotnet:
 		log.Info().Msg("Detected dotnet application")
-		if augmentedFlags.File == "" {
+		if flags.File == "" {
 			// set file flag if 1 solution file is found
-			matches, innerErr := s.findFileMatches(".", ".+\\.sln")
+			matches, innerErr := s.findFileMatches(".", "*.sln")
 			if innerErr != nil {
-				return augmentedFlags, innerErr
+				return flags, innerErr
 			}
 			if len(matches) == 1 {
-				augmentedFlags.File = matches[0]
-				log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", augmentedFlags.File)
+				flags.File = matches[0]
+				log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
 			}
 		}
 	case api.LanguagePython:
 		log.Info().Msg("Detected python application")
 	}
 
-	return
+	return flags, nil
 }
 
 func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
@@ -89,7 +88,7 @@ func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
 	}
 
 	// *.sln => dotnet
-	matches, err := s.findFileMatches(".", ".+\\.sln")
+	matches, err := s.findFileMatches(".", "*.sln")
 	if err != nil {
 		return api.LanguageUnknown, err
 	}
@@ -107,23 +106,24 @@ func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
 
 func (s *service) findFileMatches(root, pattern string) ([]string, error) {
 	var matches []string
-	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
-			return err
-		} else if matched {
-			matches = append(matches, path)
-		}
-		return nil
-	})
+
+	files, err := ioutil.ReadDir(root)
 	if err != nil {
 		return nil, err
 	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		path := file.Name()
+		if matched, err := filepath.Match(pattern, path); err != nil {
+			return nil, err
+		} else if matched {
+			matches = append(matches, path)
+		}
+	}
+
 	return matches, nil
 }
 
