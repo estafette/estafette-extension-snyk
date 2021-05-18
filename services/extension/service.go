@@ -46,13 +46,13 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (augmen
 
 	switch augmentedFlags.Language {
 	case api.LanguageGolang:
-		log.Info().Msg("Detected golang application...")
+		log.Info().Msg("Detected golang application")
 	case api.LanguageNode:
-		log.Info().Msg("Detected node application...")
+		log.Info().Msg("Detected node application")
 	case api.LanguageMaven:
-		log.Info().Msg("Detected maven application...")
+		log.Info().Msg("Detected maven application")
 	case api.LanguageDotnet:
-		log.Info().Msg("Detected dotnet application...")
+		log.Info().Msg("Detected dotnet application")
 		if augmentedFlags.File == "" {
 			// set file flag if 1 solution file is found
 			matches, innerErr := s.findFileMatches(".", ".+\\.sln")
@@ -64,6 +64,8 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (augmen
 				log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", augmentedFlags.File)
 			}
 		}
+	case api.LanguagePython:
+		log.Info().Msg("Detected python application")
 	}
 
 	return
@@ -93,6 +95,11 @@ func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
 	}
 	if len(matches) > 0 {
 		return api.LanguageDotnet, nil
+	}
+
+	// requirements.txt => python
+	if foundation.FileExists("requirements.txt") {
+		return api.LanguagePython, nil
 	}
 
 	return api.LanguageUnknown, nil

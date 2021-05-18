@@ -74,6 +74,7 @@ const (
 	LanguageNode
 	LanguageMaven
 	LanguageDotnet
+	LanguagePython
 )
 
 type Tag struct {
