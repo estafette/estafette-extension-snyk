@@ -63,12 +63,12 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 				log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
 			}
 		}
-	case api.LanguagePython:
-		log.Info().Msg("Detected python application")
-		if flags.File == "" {
-			flags.File = "requirements.txt"
-			log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
-		}
+		// case api.LanguagePython:
+		// 	log.Info().Msg("Detected python application")
+		// 	if flags.File == "" {
+		// 		flags.File = "requirements.txt"
+		// 		log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
+		// 	}
 	}
 
 	return flags, nil
@@ -171,8 +171,8 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 	case api.LanguageDotnet:
 		foundation.RunCommand(ctx, "dotnet restore --packages .nuget/packages")
 
-		// case api.LanguagePython:
-		// 	foundation.RunCommand(ctx, "pip install -r requirements.txt")
+	case api.LanguagePython:
+		foundation.RunCommand(ctx, "pip install -r requirements.txt")
 	}
 
 	err = s.snykcliClient.Auth(ctx)
