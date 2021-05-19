@@ -13,9 +13,8 @@ RUN mkdir -p /usr/share/man/man1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
-    && pip --version 
-    # \
-    # && pip install --upgrade setuptools
+    && pip --version \
+    && pip install --upgrade setuptools
 
 LABEL maintainer="estafette.io"
 
