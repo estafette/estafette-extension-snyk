@@ -93,14 +93,3 @@ type SnykFlags struct {
 	MavenUsername  string
 	MavenPassword  string
 }
-
-type ToolVersions struct {
-	Go     string `yaml:"go,omitempty"`
-	Node   string `yaml:"node,omitempty"`
-	Npm    string `yaml:"npm,omitempty"`
-	Java   string `yaml:"java,omitempty"`
-	Maven  string `yaml:"maven,omitempty"`
-	Dotnet string `yaml:"dotnet,omitempty"`
-	Python string `yaml:"python,omitempty"`
-	Pip    string `yaml:"pip,omitempty"`
-}

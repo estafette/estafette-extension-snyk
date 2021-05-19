@@ -15,15 +15,22 @@ RUN mkdir -p /usr/share/man/man1 \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
     && pip install --upgrade setuptools
 
-RUN echo "go: $(go version)" >> /versions.yaml \
-    && echo "node: $(node --version)" >> /versions.yaml \
-    && echo "npm: $(npm --version)" >> /versions.yaml \
-    # && echo "java: $(java --version)" >> /versions.yaml \
-    # && echo "mvn: $(mvn --version)" >> /versions.yaml \
-    && echo "dotnet: $(dotnet --version)" >> /versions.yaml \
-    # && echo "python: $(python --version)" >> /versions.yaml \
-    && echo "pip: $(pip --version)" >> /versions.yaml \
-    && cat /versions.yaml
+RUN echo "go:" \
+    && go version \
+    && echo "node:" \
+    && node --version \
+    && echo "npm:" \
+    && npm --version \
+    && echo "java:" \
+    && java --version \
+    && echo "mvn:" \
+    && mvn --version \
+    && echo "dotnet:" \
+    && dotnet --version \
+    && echo "python:" \
+    && python --version \
+    && echo "pip:" \
+    && pip --version
 
 LABEL maintainer="estafette.io"
 

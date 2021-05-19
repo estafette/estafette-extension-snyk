@@ -19,7 +19,7 @@ var (
 )
 
 type Service interface {
-	AugmentFlags(ctx context.Context, flags api.SnykFlags, toolVersion api.ToolVersions) (api.SnykFlags, error)
+	AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error)
 	Run(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
@@ -33,7 +33,7 @@ type service struct {
 	snykcliClient snykcli.Client
 }
 
-func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, toolVersion api.ToolVersions) (api.SnykFlags, error) {
+func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error) {
 
 	log.Info().Msg("Detecting language...")
 
@@ -45,13 +45,13 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, toolVer
 
 	switch flags.Language {
 	case api.LanguageGolang:
-		log.Info().Str("go", toolVersion.Go).Msg("Detected golang application")
+		log.Info().Msg("Detected golang application")
 	case api.LanguageNode:
-		log.Info().Str("node", toolVersion.Node).Str("npm", toolVersion.Npm).Msg("Detected node application")
+		log.Info().Msg("Detected node application")
 	case api.LanguageMaven:
-		log.Info().Str("java", toolVersion.Java).Str("maven", toolVersion.Maven).Msg("Detected maven application")
+		log.Info().Msg("Detected maven application")
 	case api.LanguageDotnet:
-		log.Info().Str("dotnet", toolVersion.Dotnet).Msg("Detected dotnet application")
+		log.Info().Msg("Detected dotnet application")
 		if flags.File == "" {
 			// set file flag if 1 solution file is found
 			matches, innerErr := s.findFileMatches(".", "*.sln")
@@ -64,7 +64,7 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, toolVer
 			}
 		}
 	case api.LanguagePython:
-		log.Info().Str("python", toolVersion.Python).Str("pip", toolVersion.Pip).Msg("Detected python application")
+		log.Info().Msg("Detected python application")
 		// 	if flags.File == "" {
 		// 		flags.File = "requirements.txt"
 		// 		log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -11,7 +10,6 @@ import (
 	"github.com/estafette/estafette-extension-snyk/services/extension"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -71,18 +69,7 @@ func main() {
 		MavenPassword:  *mavenPassword,
 	}
 
-	versionsData, err := ioutil.ReadFile("/versions.yaml")
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed reading /versions.yaml file")
-	}
-
-	var toolVersions api.ToolVersions
-	err = yaml.Unmarshal(versionsData, &toolVersions)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed unmarshalling /versions.yaml file")
-	}
-
-	flags, err = extensionService.AugmentFlags(ctx, flags, toolVersions)
+	flags, err = extensionService.AugmentFlags(ctx, flags)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed augmenting flags")
 	}
