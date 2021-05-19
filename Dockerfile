@@ -8,13 +8,13 @@ RUN mkdir -p /usr/share/man/man1 \
       nodejs \
       npm \
       maven \
-      # python3-pip \
+      python3-pip \
       # build-essential \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
+    && pip --version 
     # \
-    # && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
-    # && pip --version \
     # && pip install --upgrade setuptools
 
 LABEL maintainer="estafette.io"
