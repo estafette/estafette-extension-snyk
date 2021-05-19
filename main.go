@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -10,6 +11,7 @@ import (
 	"github.com/estafette/estafette-extension-snyk/services/extension"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -34,15 +36,6 @@ var (
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
-
-	versionGo     = kingpin.Flag("version-go", "Version info.").Envar("EXT_GO_VERSION").String()
-	versionNode   = kingpin.Flag("version-node", "Version info.").Envar("EXT_NODE_VERSION").String()
-	versionNpm    = kingpin.Flag("version-npm", "Version info.").Envar("EXT_NPM_VERSION").String()
-	versionJava   = kingpin.Flag("version-java", "Version info.").Envar("EXT_JAVA_VERSION").String()
-	versionMaven  = kingpin.Flag("version-maven", "Version info.").Envar("EXT_MAVEN_VERSION").String()
-	versionDotnet = kingpin.Flag("version-dotnet", "Version info.").Envar("EXT_DOTNET_VERSION").String()
-	versionPython = kingpin.Flag("version-python", "Version info.").Envar("EXT_PYTHON_VERSION").String()
-	versionPip    = kingpin.Flag("version-pip", "Version info.").Envar("EXT_PIP_VERSION").String()
 )
 
 func main() {
@@ -78,15 +71,15 @@ func main() {
 		MavenPassword:  *mavenPassword,
 	}
 
-	toolVersions := api.ToolVersions{
-		Go:     *versionGo,
-		Node:   *versionNode,
-		Npm:    *versionNpm,
-		Java:   *versionJava,
-		Maven:  *versionMaven,
-		Dotnet: *versionDotnet,
-		Python: *versionPython,
-		Pip:    *versionPip,
+	versionsData, err := ioutil.ReadFile("/versions.yaml")
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed reading /versions.yaml file")
+	}
+
+	var toolVersions api.ToolVersions
+	err = yaml.Unmarshal(versionsData, &toolVersions)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed unmarshalling /versions.yaml file")
 	}
 
 	flags, err = extensionService.AugmentFlags(ctx, flags, toolVersions)

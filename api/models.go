@@ -95,12 +95,12 @@ type SnykFlags struct {
 }
 
 type ToolVersions struct {
-	Go     string
-	Node   string
-	Npm    string
-	Java   string
-	Maven  string
-	Dotnet string
-	Python string
-	Pip    string
+	Go     string `yaml:"go,omitempty"`
+	Node   string `yaml:"node,omitempty"`
+	Npm    string `yaml:"npm,omitempty"`
+	Java   string `yaml:"java,omitempty"`
+	Maven  string `yaml:"maven,omitempty"`
+	Dotnet string `yaml:"dotnet,omitempty"`
+	Python string `yaml:"python,omitempty"`
+	Pip    string `yaml:"pip,omitempty"`
 }
