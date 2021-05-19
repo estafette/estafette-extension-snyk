@@ -34,6 +34,15 @@ var (
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
+
+	versionGo     = kingpin.Flag("version-go", "Version info.").Envar("EXT_GO_VERSION").String()
+	versionNode   = kingpin.Flag("version-node", "Version info.").Envar("EXT_NODE_VERSION").String()
+	versionNpm    = kingpin.Flag("version-npm", "Version info.").Envar("EXT_NPM_VERSION").String()
+	versionJava   = kingpin.Flag("version-java", "Version info.").Envar("EXT_JAVA_VERSION").String()
+	versionMaven  = kingpin.Flag("version-maven", "Version info.").Envar("EXT_MAVEN_VERSION").String()
+	versionDotnet = kingpin.Flag("version-dotnet", "Version info.").Envar("EXT_DOTNET_VERSION").String()
+	versionPython = kingpin.Flag("version-python", "Version info.").Envar("EXT_PYTHON_VERSION").String()
+	versionPip    = kingpin.Flag("version-pip", "Version info.").Envar("EXT_PIP_VERSION").String()
 )
 
 func main() {
@@ -69,7 +78,18 @@ func main() {
 		MavenPassword:  *mavenPassword,
 	}
 
-	flags, err = extensionService.AugmentFlags(ctx, flags)
+	toolVersions := api.ToolVersions{
+		Go:     *versionGo,
+		Node:   *versionNode,
+		Npm:    *versionNpm,
+		Java:   *versionJava,
+		Maven:  *versionMaven,
+		Dotnet: *versionDotnet,
+		Python: *versionPython,
+		Pip:    *versionPip,
+	}
+
+	flags, err = extensionService.AugmentFlags(ctx, flags, toolVersions)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed augmenting flags")
 	}

@@ -93,3 +93,14 @@ type SnykFlags struct {
 	MavenUsername  string
 	MavenPassword  string
 }
+
+type ToolVersions struct {
+	Go     string
+	Node   string
+	Npm    string
+	Java   string
+	Maven  string
+	Dotnet string
+	Python string
+	Pip    string
+}
