@@ -167,8 +167,8 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 	case api.LanguageDotnet:
 		foundation.RunCommand(ctx, "dotnet restore --packages .nuget/packages")
 
-	case api.LanguagePython:
-		foundation.RunCommand(ctx, "pip install -r requirements.txt")
+		// case api.LanguagePython:
+		// 	foundation.RunCommand(ctx, "pip install -r requirements.txt")
 	}
 
 	err = s.snykcliClient.Auth(ctx)
