@@ -9,7 +9,7 @@ RUN mkdir -p /usr/share/man/man1 \
       npm \
       maven \
       python3-pip \
-      # build-essential \
+      build-essential \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
