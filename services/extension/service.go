@@ -65,6 +65,10 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 		}
 	case api.LanguagePython:
 		log.Info().Msg("Detected python application")
+		if flags.File == "" {
+			flags.File = "requirements.txt"
+			log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
+		}
 	}
 
 	return flags, nil
