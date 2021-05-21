@@ -8,6 +8,7 @@ RUN mkdir -p /usr/share/man/man1 \
       nodejs \
       npm \
       maven \
+      python3-dev \
       python3-pip \
       build-essential \
     && apt-get clean \
