@@ -14,6 +14,7 @@ RUN mkdir -p /usr/share/man/man1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
+    && pip install -U pip \
     && pip install --upgrade setuptools
 
 RUN echo "go:" \
