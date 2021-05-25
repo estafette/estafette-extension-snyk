@@ -88,6 +88,7 @@ type SnykFlags struct {
 	File              string
 	PackagesFolder    string
 	SeverityThreshold string
+	Debug             bool
 
 	MavenMirrorUrl string
 	MavenUsername  string

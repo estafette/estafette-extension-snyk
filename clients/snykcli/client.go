@@ -48,6 +48,9 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	if flags.SeverityThreshold != "" {
 		command += " --severity-threshold=" + flags.SeverityThreshold
 	}
+	if flags.Debug {
+		command += " -d"
+	}
 
 	err = foundation.RunCommandExtended(ctx, command)
 	if err != nil {
