@@ -11,6 +11,7 @@ RUN mkdir -p /usr/share/man/man1 \
       python3-dev \
       python3-pip \
       build-essential \
+      liblz4-1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
