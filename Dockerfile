@@ -10,6 +10,7 @@ RUN mkdir -p /usr/share/man/man1 \
       maven \
       python3-dev \
       python3-pip \
+      python3-setuptools \
       build-essential \
       liblz4-1 \
     && apt-get clean \

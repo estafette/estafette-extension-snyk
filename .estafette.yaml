@@ -28,28 +28,13 @@ stages:
   bake:
     image: extensions/docker:dev
     action: build
+    severity: unknown
     container: snyk
     repositories:
     - extensions
     path: ./publish
     copy:
     - settings.xml
-  
-  check-container:
-    parallelStages:
-      check-efficiency:
-        image: extensions/docker:dev
-        action: dive
-        container: snyk
-        repositories:
-        - extensions
-
-      vulnerability-scan:
-        image: extensions/docker:dev
-        action: trivy
-        container: snyk
-        repositories:
-        - extensions
 
   test:
     image: extensions/snyk:${ESTAFETTE_BUILD_VERSION}
