@@ -19,15 +19,6 @@ RUN mkdir -p /usr/share/man/man1 \
     && pip install -U pip \
     && pip install --upgrade setuptools
 
-# fix vulnerabilities
-RUN curl -fSL https://mirror.koddos.net/apache/commons/io/binaries/commons-io-2.9.0-bin.tar.gz | tar xvz \
-    && cp commons-io-2.9.0/commons-io-2.9.0.jar /usr/share/java/commons-io.jar
-
-RUN curl -fSL https://repo1.maven.org/maven2/com/google/guava/guava/30.1.1-jre/guava-30.1.1-jre.jar --output usr/share/java/guava.jar
-
-RUN curl -fSL https://repo.maven.apache.org/maven2/org/apache/maven/wagon/wagon-http/3.4.3/wagon-http-3.4.3-shaded.jar --output /usr/share/java/wagon-http-shaded-3.4.3.jar \
-    && rm -rf /usr/share/java/wagon-http-shaded-3.3.1.jar
-
 RUN echo "go:" \
     && go version \
     && echo "node:" \
