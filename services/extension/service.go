@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/estafette/estafette-extension-snyk/api"
+	"github.com/estafette/estafette-extension-snyk/clients/credentials"
 	"github.com/estafette/estafette-extension-snyk/clients/snykcli"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
@@ -23,14 +24,16 @@ type Service interface {
 	Run(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
-func NewService(snykcliClient snykcli.Client) Service {
+func NewService(credentialsClient credentials.Client, snykcliClient snykcli.Client) Service {
 	return &service{
-		snykcliClient: snykcliClient,
+		credentialsClient: credentialsClient,
+		snykcliClient:     snykcliClient,
 	}
 }
 
 type service struct {
-	snykcliClient snykcli.Client
+	credentialsClient credentials.Client
+	snykcliClient     snykcli.Client
 }
 
 func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error) {
@@ -140,11 +143,18 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 
 	case api.LanguageMaven:
-		if flags.MavenMirrorUrl != "" && flags.MavenUsername != "" && flags.MavenPassword != "" {
+
+		var credential api.APITokenCredentials
+		credential, err = s.credentialsClient.GetCredential(ctx)
+		if err != nil {
+			return
+		}
+
+		if credential.AdditionalProperties.MavenMirrorUrl != "" && credential.AdditionalProperties.MavenUsername != "" && credential.AdditionalProperties.MavenPassword != "" {
 			log.Info().Msg("Initializing maven settings...")
 			foundation.RunCommand(ctx, "mkdir -p /root/.m2")
 
-			log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", flags.MavenMirrorUrl, flags.MavenUsername, flags.MavenPassword)
+			log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", credential.AdditionalProperties.MavenMirrorUrl, credential.AdditionalProperties.MavenUsername, credential.AdditionalProperties.MavenPassword)
 			settingsTemplate, err := template.New("settings.xml").ParseFiles("/settings.xml")
 			if err != nil {
 				log.Fatal().Err(err).Msg("Failed parsing settings.xml")
@@ -154,7 +164,7 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 				MirrorUrl string
 				Username  string
 				Password  string
-			}{flags.MavenMirrorUrl, flags.MavenUsername, flags.MavenPassword}
+			}{credential.AdditionalProperties.MavenMirrorUrl, credential.AdditionalProperties.MavenUsername, credential.AdditionalProperties.MavenPassword}
 
 			var renderedSettings bytes.Buffer
 			err = settingsTemplate.Execute(&renderedSettings, data)

@@ -29,10 +29,6 @@ var (
 	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
 	debug             = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
 
-	mavenMirrorUrl = kingpin.Flag("maven-mirror-url", "Maven mirror to use for fetching packages.").Envar("ESTAFETTE_EXTENSION_MAVEN_MIRROR_URL").String()
-	mavenUsername  = kingpin.Flag("maven-user", "Maven mirror username.").Envar("ESTAFETTE_EXTENSION_MAVEN_USERNAME").String()
-	mavenPassword  = kingpin.Flag("maven-password", "Maven mirror password.").Envar("ESTAFETTE_EXTENSION_MAVEN_PASSWORD").String()
-
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
 )
@@ -49,14 +45,14 @@ func main() {
 	ctx := foundation.InitCancellationContext(context.Background())
 
 	// get api token from injected credentials
-	credentialsClient := credentials.NewClient()
-	token, err := credentialsClient.GetToken(ctx, *snykAPITokenPath)
+	credentialsClient := credentials.NewClient(*snykAPITokenPath)
+	token, err := credentialsClient.GetToken(ctx)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed getting snyk api token from injected credentials")
 	}
 
 	snykcliClient := snykcli.NewClient(token)
-	extensionService := extension.NewService(snykcliClient)
+	extensionService := extension.NewService(credentialsClient, snykcliClient)
 
 	flags := api.SnykFlags{
 		Language:          api.LanguageUnknown,
@@ -65,10 +61,6 @@ func main() {
 		PackagesFolder:    *packagesFolder,
 		SeverityThreshold: *severityThreshold,
 		Debug:             *debug,
-
-		MavenMirrorUrl: *mavenMirrorUrl,
-		MavenUsername:  *mavenUsername,
-		MavenPassword:  *mavenPassword,
 	}
 
 	flags, err = extensionService.AugmentFlags(ctx, flags)

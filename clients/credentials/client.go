@@ -18,29 +18,32 @@ var (
 )
 
 type Client interface {
-	GetToken(ctx context.Context, snykAPITokenPath string) (token string, err error)
+	GetCredential(ctx context.Context) (credential api.APITokenCredentials, err error)
+	GetToken(ctx context.Context) (token string, err error)
 }
 
 // NewClient returns a new credentials.Client
-func NewClient() Client {
-	return &client{}
-}
-
-type client struct {
-}
-
-func (c *client) GetToken(ctx context.Context, snykAPITokenPath string) (token string, err error) {
-
-	// get api token from injected credentials
+func NewClient(snykAPITokenPath string) Client {
 	if runtime.GOOS == "windows" {
 		snykAPITokenPath = "C:" + snykAPITokenPath
 	}
-	if !foundation.FileExists(snykAPITokenPath) {
-		return token, ErrInjectedCredentialsFileMissing
+	return &client{
+		snykAPITokenPath: snykAPITokenPath,
+	}
+}
+
+type client struct {
+	snykAPITokenPath string
+}
+
+func (c *client) GetCredential(ctx context.Context) (credential api.APITokenCredentials, err error) {
+	// get api token from injected credentials
+	if !foundation.FileExists(c.snykAPITokenPath) {
+		return credential, ErrInjectedCredentialsFileMissing
 	}
 
-	log.Info().Msgf("Reading credentials from file at path %v...", snykAPITokenPath)
-	credentialsFileContent, err := ioutil.ReadFile(snykAPITokenPath)
+	log.Info().Msgf("Reading credentials from file at path %v...", c.snykAPITokenPath)
+	credentialsFileContent, err := ioutil.ReadFile(c.snykAPITokenPath)
 	if err != nil {
 		return
 	}
@@ -52,10 +55,20 @@ func (c *client) GetToken(ctx context.Context, snykAPITokenPath string) (token s
 		return
 	}
 	if len(credentials) == 0 {
-		return token, ErrEmptyToken
+		return credential, ErrEmptyToken
 	}
 
-	token = credentials[0].AdditionalProperties.Token
+	return credentials[0], nil
+}
+
+func (c *client) GetToken(ctx context.Context) (token string, err error) {
+
+	credential, err := c.GetCredential(ctx)
+	if err != nil {
+		return
+	}
+
+	token = credential.AdditionalProperties.Token
 
 	if token == "" {
 		return token, ErrEmptyToken

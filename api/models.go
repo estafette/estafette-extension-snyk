@@ -7,7 +7,10 @@ type APITokenCredentials struct {
 }
 
 type APITokenCredentialsAdditionalProperties struct {
-	Token string `json:"token,omitempty"`
+	Token          string `json:"token,omitempty"`
+	MavenMirrorUrl string `json:"mavenMirrorUrl,omitempty"`
+	MavenUsername  string `json:"mavenUsername,omitempty"`
+	MavenPassword  string `json:"mavenPassword,omitempty"`
 }
 
 type Organization struct {
@@ -97,8 +100,4 @@ type SnykFlags struct {
 	PackagesFolder    string
 	SeverityThreshold string
 	Debug             bool
-
-	MavenMirrorUrl string
-	MavenUsername  string
-	MavenPassword  string
 }
