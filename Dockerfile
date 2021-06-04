@@ -34,7 +34,9 @@ RUN echo "go:" \
     && echo "python:" \
     && python --version \
     && echo "pip:" \
-    && pip --version
+    && pip --version \
+    && echo "apt list --installed:" \
+    && apt list --installed
 
 LABEL maintainer="estafette.io"
 
