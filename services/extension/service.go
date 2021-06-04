@@ -46,15 +46,10 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 		return flags, err
 	}
 
+	log.Info().Msgf("Detected %v application", flags.Language)
+
 	switch flags.Language {
-	case api.LanguageGolang:
-		log.Info().Msg("Detected golang application")
-	case api.LanguageNode:
-		log.Info().Msg("Detected node application")
-	case api.LanguageMaven:
-		log.Info().Msg("Detected maven application")
 	case api.LanguageDotnet:
-		log.Info().Msg("Detected dotnet application")
 		if flags.File == "" {
 			// set file flag if 1 solution file is found
 			matches, innerErr := s.findFileMatches(".", "*.sln")
@@ -66,12 +61,6 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 				log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
 			}
 		}
-	case api.LanguagePython:
-		log.Info().Msg("Detected python application")
-		// 	if flags.File == "" {
-		// 		flags.File = "requirements.txt"
-		// 		log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
-		// 	}
 	}
 
 	return flags, nil
@@ -106,6 +95,11 @@ func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
 	// requirements.txt => python
 	if foundation.FileExists("requirements.txt") {
 		return api.LanguagePython, nil
+	}
+
+	// Dockerfile => docker
+	if foundation.FileExists("Dockerfile") {
+		return api.LanguageDocker, nil
 	}
 
 	return api.LanguageUnknown, nil
@@ -143,7 +137,6 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 
 	case api.LanguageMaven:
-
 		var credential api.APITokenCredentials
 		credential, err = s.credentialsClient.GetCredential(ctx)
 		if err != nil {

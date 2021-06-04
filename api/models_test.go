@@ -30,4 +30,8 @@ func TestLanguageString(t *testing.T) {
 	t.Run("PythonReturnsPython", func(t *testing.T) {
 		assert.Equal(t, "Python", LanguagePython.String())
 	})
+
+	t.Run("DockerReturnsDocker", func(t *testing.T) {
+		assert.Equal(t, "Docker", LanguageDocker.String())
+	})
 }

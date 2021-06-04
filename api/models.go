@@ -78,6 +78,7 @@ const (
 	LanguageMaven
 	LanguageDotnet
 	LanguagePython
+	LanguageDocker
 )
 
 func (l Language) IgnoreErrors() bool {
@@ -85,7 +86,7 @@ func (l Language) IgnoreErrors() bool {
 }
 
 func (l Language) String() string {
-	return [...]string{"Unknown", "Golang", "Node", "Maven", "Dotnet", "Python"}[l]
+	return [...]string{"Unknown", "Golang", "Node", "Maven", "Dotnet", "Python", "Docker"}[l]
 }
 
 type Tag struct {
