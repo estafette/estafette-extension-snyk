@@ -20,9 +20,8 @@ RUN mkdir -p /usr/share/man/man1 \
     && pip install --upgrade setuptools
 
 # fix vulnerabilities
-RUN curl -fSL https://mirror.koddos.net/apache//commons/io/binaries/commons-io-2.9.0-bin.tar.gz | tar xvz \
-    # -C /usr/share/java/commons-io.jar
-    && ls -latr
+RUN curl -fSL https://mirror.koddos.net/apache/commons/io/binaries/commons-io-2.7-bin.tar.gz | tar xvz \
+    && cp commons-io-2.7/commons-io-2.7.jar /usr/share/java/commons-io.jar
 
 RUN echo "go:" \
     && go version \
