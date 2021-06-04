@@ -77,6 +77,10 @@ const (
 	LanguagePython
 )
 
+func (l Language) IgnoreErrors() bool {
+	return l == LanguagePython
+}
+
 type Tag struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
