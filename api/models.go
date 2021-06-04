@@ -81,6 +81,10 @@ func (l Language) IgnoreErrors() bool {
 	return l == LanguagePython
 }
 
+func (l Language) String() string {
+	return [...]string{"Unknown", "Golang", "Node", "Maven", "Dotnet", "Python"}[l]
+}
+
 type Tag struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
