@@ -23,6 +23,8 @@ RUN mkdir -p /usr/share/man/man1 \
 RUN curl -fSL https://mirror.koddos.net/apache/commons/io/binaries/commons-io-2.9.0-bin.tar.gz | tar xvz \
     && cp commons-io-2.9.0/commons-io-2.9.0.jar /usr/share/java/commons-io.jar
 
+RUN curl -fSL https://repo1.maven.org/maven2/com/google/guava/guava/30.1.1-jre/guava-30.1.1-jre.jar --output usr/share/java/guava.jar
+
 RUN echo "go:" \
     && go version \
     && echo "node:" \
