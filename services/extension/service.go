@@ -172,7 +172,7 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		innerErr := foundation.RunCommandExtended(ctx, "dotnet restore --packages .nuget/packages")
 		if innerErr != nil {
 			if flags.Language.IgnoreErrors() {
-				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until support is finished", flags.Language)
+				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until language is fully supported...", flags.Language)
 			} else {
 				return innerErr
 			}
@@ -182,7 +182,7 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		innerErr := foundation.RunCommandExtended(ctx, "pip install -r requirements.txt")
 		if innerErr != nil {
 			if flags.Language.IgnoreErrors() {
-				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until support is finished", flags.Language)
+				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until language is fully supported...", flags.Language)
 			} else {
 				return innerErr
 			}
@@ -197,7 +197,7 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 	err = s.snykcliClient.Test(ctx, flags)
 	if err != nil {
 		if flags.Language.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed testing %v application, ignoring until support is finished", flags.Language)
+			log.Warn().Err(err).Msgf("Failed testing %v application, ignoring until language is fully supported...", flags.Language)
 		} else {
 			return
 		}
