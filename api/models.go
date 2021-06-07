@@ -95,10 +95,12 @@ type Tag struct {
 }
 
 type SnykFlags struct {
-	Language          Language
-	FailOn            string
-	File              string
-	PackagesFolder    string
-	SeverityThreshold string
-	Debug             bool
+	Language           Language
+	FailOn             string
+	File               string
+	PackagesFolder     string
+	SeverityThreshold  string
+	AllProjects        bool
+	ExcludeDirectories []string
+	Debug              bool
 }

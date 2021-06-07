@@ -4,11 +4,15 @@ This Estafette extension checks whether the running pipeline repository has any 
 
 ## Parameters
 
-| Parameter           | Description                                                 | Allowed values                   | Default value |
-| ------------------- | ----------------------------------------------------------- | -------------------------------- | --------------|
-| `severityThreshold` | Only report vulnerabilities of provided level or higher.    | `low`, `medium`, `high`          | `high`        |
-| `failOn`            | Only fail when there are vulnerabilities that can be fixed. | `all`, `upgradable`, `patchable` | `all`         |
-| `file`              | Sets a package file.                                        | string                           |               |
+| Parameter            | Description                                                 | Allowed values                   | Default value |
+| -------------------- | ----------------------------------------------------------- | -------------------------------- | --------------|
+| `allProjects`        | Auto-detect all projects in working directory.              | bool                             | `false`       |
+| `debug`              | Output debug logs.                                          | bool                             | `false`       |
+| `exclude`            | Indicate sub-directories to exclude.                        | comma separated string           |               |
+| `failOn`             | Only fail when there are vulnerabilities that can be fixed. | `all`, `upgradable`, `patchable` | `all`         |
+| `file`               | Sets a package file.                                        | string                           |               |
+| `packagesFolder`     | Custom path to packages folder.                             | string                           |               |
+| `severityThreshold`  | Only report vulnerabilities of provided level or higher.    | `low`, `medium`, `high`          | `high`        |
 
 ## Usage
 

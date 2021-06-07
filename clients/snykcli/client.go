@@ -2,6 +2,7 @@ package snykcli
 
 import (
 	"context"
+	"strings"
 
 	"github.com/estafette/estafette-extension-snyk/api"
 	foundation "github.com/estafette/estafette-foundation"
@@ -47,6 +48,12 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	}
 	if flags.SeverityThreshold != "" {
 		command += " --severity-threshold=" + flags.SeverityThreshold
+	}
+	if flags.AllProjects {
+		command += " --all-projects"
+	}
+	if len(flags.ExcludeDirectories) > 0 {
+		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
 	}
 	if flags.Debug {
 		command += " -d"

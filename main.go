@@ -23,11 +23,13 @@ var (
 
 var (
 	// parameters
-	failOn            = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
-	file              = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
-	packagesFolder    = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
-	severityThreshold = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
-	debug             = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
+	failOn             = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
+	file               = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
+	packagesFolder     = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
+	severityThreshold  = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
+	allProjects        = kingpin.Flag("all-projects", "Scan for all types of supported projects.").Envar("ESTAFETTE_EXTENSION_ALL_PROJECTS").Bool()
+	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Envar("ESTAFETTE_EXTENSION_EXCLUDE").Strings()
+	debug              = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
@@ -55,12 +57,14 @@ func main() {
 	extensionService := extension.NewService(credentialsClient, snykcliClient)
 
 	flags := api.SnykFlags{
-		Language:          api.LanguageUnknown,
-		FailOn:            *failOn,
-		File:              *file,
-		PackagesFolder:    *packagesFolder,
-		SeverityThreshold: *severityThreshold,
-		Debug:             *debug,
+		Language:           api.LanguageUnknown,
+		FailOn:             *failOn,
+		File:               *file,
+		PackagesFolder:     *packagesFolder,
+		SeverityThreshold:  *severityThreshold,
+		AllProjects:        *allProjects,
+		ExcludeDirectories: *excludeDirectories,
+		Debug:              *debug,
 	}
 
 	flags, err = extensionService.AugmentFlags(ctx, flags)
