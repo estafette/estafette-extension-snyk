@@ -50,17 +50,17 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 
 	switch flags.Language {
 	case api.LanguageDotnet:
-		if flags.File == "" {
-			// set file flag if 1 solution file is found
-			matches, innerErr := s.findFileMatches(".", "*.sln")
-			if innerErr != nil {
-				return flags, innerErr
-			}
-			if len(matches) == 1 {
-				flags.File = matches[0]
-				log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
-			}
-		}
+		// if flags.File == "" {
+		// 	// set file flag if 1 solution file is found
+		// 	matches, innerErr := s.findFileMatches(".", "*.sln")
+		// 	if innerErr != nil {
+		// 		return flags, innerErr
+		// 	}
+		// 	if len(matches) == 1 {
+		// 		flags.File = matches[0]
+		// 		log.Info().Msgf("Autodetected file %v and using it as 'file' parameter", flags.File)
+		// 	}
+		// }
 	}
 
 	return flags, nil
