@@ -40,7 +40,8 @@ RUN echo "go:" \
 
 LABEL maintainer="estafette.io"
 
-RUN npm install -g snyk
+RUN npm install -g snyk \
+    && snyk --version
 
 COPY ${ESTAFETTE_GIT_NAME} /
 COPY settings.xml /settings.xml
