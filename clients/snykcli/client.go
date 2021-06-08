@@ -56,9 +56,6 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
 	command := "snyk test"
-	if flags.ProjectName != "" {
-		command += " --project-name=" + flags.ProjectName
-	}
 	if flags.FailOn != "" {
 		command += " --fail-on=" + flags.FailOn
 	}
