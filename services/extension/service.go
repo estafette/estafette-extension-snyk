@@ -191,15 +191,6 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = s.snykcliClient.Monitor(ctx, flags)
-	if err != nil {
-		if flags.Language.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed monitoring %v application, ignoring until language is fully supported...", flags.Language)
-		} else {
-			return
-		}
-	}
-
 	err = s.snykcliClient.Test(ctx, flags)
 	if err != nil {
 		if flags.Language.IgnoreErrors() {
