@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"html/template"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -47,6 +49,13 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 	}
 
 	log.Info().Msgf("Detected %v application", flags.Language)
+
+	repoOwner := os.Getenv("ESTAFETTE_GIT_OWNER")
+	repoName := os.Getenv("ESTAFETTE_GIT_NAME")
+	if flags.ProjectName == "" && repoOwner != "" && repoName != "" {
+		flags.ProjectName = fmt.Sprintf("%v/%v", repoOwner, repoName)
+		log.Info().Msgf("Automatically set projectName to %v", flags.ProjectName)
+	}
 
 	return flags, nil
 }

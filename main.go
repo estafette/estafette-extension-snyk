@@ -26,6 +26,7 @@ var (
 	failOn             = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
 	file               = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
 	packagesFolder     = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
+	projectName        = kingpin.Flag("project-name", "Specify a custom Snyk project name.").Envar("ESTAFETTE_EXTENSION_PROJECT_NAME").String()
 	severityThreshold  = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
 	allProjects        = kingpin.Flag("all-projects", "Scan for all types of supported projects.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_ALL_PROJECTS").Bool()
 	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").Strings()
@@ -61,6 +62,7 @@ func main() {
 		FailOn:             *failOn,
 		File:               *file,
 		PackagesFolder:     *packagesFolder,
+		ProjectName:        *projectName,
 		SeverityThreshold:  *severityThreshold,
 		AllProjects:        *allProjects,
 		ExcludeDirectories: *excludeDirectories,

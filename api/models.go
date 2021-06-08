@@ -99,6 +99,7 @@ type SnykFlags struct {
 	FailOn             string
 	File               string
 	PackagesFolder     string
+	ProjectName        string
 	SeverityThreshold  string
 	AllProjects        bool
 	ExcludeDirectories []string
