@@ -4,15 +4,16 @@ This Estafette extension checks whether the running pipeline repository has any 
 
 ## Parameters
 
-| Parameter            | Description                                                 | Allowed values                   | Default value |
-| -------------------- | ----------------------------------------------------------- | -------------------------------- | --------------|
-| `allProjects`        | Auto-detect all projects in working directory.              | bool                             | `false`       |
-| `debug`              | Output debug logs.                                          | bool                             | `false`       |
-| `exclude`            | Indicate sub-directories to exclude.                        | comma separated string           |               |
-| `failOn`             | Only fail when there are vulnerabilities that can be fixed. | `all`, `upgradable`, `patchable` | `all`         |
-| `file`               | Sets a package file.                                        | string                           |               |
-| `packagesFolder`     | Custom path to packages folder.                             | string                           |               |
-| `severityThreshold`  | Only report vulnerabilities of provided level or higher.    | `low`, `medium`, `high`          | `high`        |
+| Parameter            | Description                                                 | Allowed values                   | Default value                                  |
+| -------------------- | ----------------------------------------------------------- | -------------------------------- | ---------------------------------------------- |
+| `allProjects`        | Auto-detect all projects in working directory.              | bool                             | `false`                                        |
+| `debug`              | Output debug logs.                                          | bool                             | `false`                                        |
+| `exclude`            | Indicate sub-directories to exclude.                        | comma separated string           |                                                |
+| `failOn`             | Only fail when there are vulnerabilities that can be fixed. | `all`, `upgradable`, `patchable` | `all`                                          |
+| `file`               | Sets a package file.                                        | string                           |                                                |
+| `packagesFolder`     | Custom path to packages folder.                             | string                           |                                                |
+| `projectName`        | Specify a custom Snyk project name.                         | string                           | `${ESTAFETTE_GIT_OWNER}/${ESTAFETTE_GIT_NAME}` |
+| `severityThreshold`  | Only report vulnerabilities of provided level or higher.    | `low`, `medium`, `high`          | `high`                                         |
 
 ## Usage
 
