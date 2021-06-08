@@ -38,7 +38,12 @@ func (c *client) Auth(ctx context.Context) (err error) {
 func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
 	command := "snyk monitor"
-	command += c.getFlags(flags)
+	if flags.ProjectName != "" {
+		command += " --project-name=" + flags.ProjectName
+	}
+	if flags.Debug {
+		command += " -d"
+	}
 
 	err = foundation.RunCommandExtended(ctx, command)
 	if err != nil {
@@ -51,18 +56,6 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
 	command := "snyk test"
-	command += c.getFlags(flags)
-
-	err = foundation.RunCommandExtended(ctx, command)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (c *client) getFlags(flags api.SnykFlags) string {
-	command := ""
 	if flags.ProjectName != "" {
 		command += " --project-name=" + flags.ProjectName
 	}
@@ -88,5 +81,10 @@ func (c *client) getFlags(flags api.SnykFlags) string {
 		command += " -d"
 	}
 
-	return command
+	err = foundation.RunCommandExtended(ctx, command)
+	if err != nil {
+		return
+	}
+
+	return
 }
