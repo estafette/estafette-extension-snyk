@@ -2,11 +2,16 @@ package snykcli
 
 import (
 	"context"
+	"errors"
 	"os/exec"
 	"strings"
 
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
 	foundation "github.com/estafette/estafette-foundation"
+)
+
+var (
+	ErrNoSupportedTargetFiles = errors.New("Could not detect supported target files")
 )
 
 type Client interface {
@@ -99,7 +104,7 @@ func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command s
 		// 2: failure, try to re-run command
 		// 3: failure, no supported projects detected
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
-			return nil
+			return ErrNoSupportedTargetFiles
 		}
 
 		return
@@ -142,7 +147,7 @@ func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command stri
 		// 2: failure, try to re-run command
 		// 3: failure, no supported projects detected
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
-			return nil
+			return ErrNoSupportedTargetFiles
 		}
 
 		return

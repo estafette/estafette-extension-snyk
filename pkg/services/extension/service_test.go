@@ -13,7 +13,7 @@ func TestFindFileMatches(t *testing.T) {
 		service := service{}
 
 		// act
-		matches, err := service.findFileMatches("../../..", "*.mod")
+		matches, err := service.findFileMatches("../../..", []string{"*.mod"})
 
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(matches))
