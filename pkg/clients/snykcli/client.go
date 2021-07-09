@@ -42,7 +42,7 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = c.monitorCore(ctx, flags, "snyk container monitor", false)
+	err = c.monitorCore(ctx, flags, "snyk container monitor "+flags.GroupName, false)
 	if err != nil {
 		return
 	}
@@ -61,7 +61,7 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = c.testCore(ctx, flags, "snyk container test", false)
+	err = c.testCore(ctx, flags, "snyk container test "+flags.GroupName, false)
 	if err != nil {
 		return
 	}
