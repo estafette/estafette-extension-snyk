@@ -9,9 +9,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/estafette/estafette-extension-snyk/api"
-	"github.com/estafette/estafette-extension-snyk/clients/credentials"
-	"github.com/estafette/estafette-extension-snyk/clients/snykcli"
+	"github.com/estafette/estafette-extension-snyk/pkg/api"
+	"github.com/estafette/estafette-extension-snyk/pkg/clients/credentials"
+	"github.com/estafette/estafette-extension-snyk/pkg/clients/snykcli"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
 )

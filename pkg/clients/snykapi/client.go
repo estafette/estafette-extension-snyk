@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/estafette/estafette-extension-snyk/api"
+	"github.com/estafette/estafette-extension-snyk/pkg/api"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/rs/zerolog/log"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/estafette/estafette-extension-snyk/api"
+	"github.com/estafette/estafette-extension-snyk/pkg/api"
 	foundation "github.com/estafette/estafette-foundation"
 )
 
