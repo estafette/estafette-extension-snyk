@@ -41,15 +41,15 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = c.monitorCore(ctx, flags, "snyk container monitor", false)
-	if err != nil {
-		return
-	}
+	// err = c.monitorCore(ctx, flags, "snyk container monitor", false)
+	// if err != nil {
+	// 	return
+	// }
 
-	err = c.monitorCore(ctx, flags, "snyk iac monitor", false)
-	if err != nil {
-		return
-	}
+	// err = c.monitorCore(ctx, flags, "snyk iac monitor", false)
+	// if err != nil {
+	// 	return
+	// }
 
 	return nil
 }
@@ -60,15 +60,15 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = c.testCore(ctx, flags, "snyk container test", false)
-	if err != nil {
-		return
-	}
+	// err = c.testCore(ctx, flags, "snyk container test", false)
+	// if err != nil {
+	// 	return
+	// }
 
-	err = c.testCore(ctx, flags, "snyk iac test", false)
-	if err != nil {
-		return
-	}
+	// err = c.testCore(ctx, flags, "snyk iac test", false)
+	// if err != nil {
+	// 	return
+	// }
 
 	return nil
 }
