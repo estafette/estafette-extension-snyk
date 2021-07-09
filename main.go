@@ -31,6 +31,7 @@ var (
 	allProjects        = kingpin.Flag("all-projects", "Scan for all types of supported projects.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_ALL_PROJECTS").Bool()
 	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").Strings()
 	debug              = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
+	scan               = kingpin.Flag("scan", "Scan repository for vulnerabilities.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SCAN").Bool()
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
@@ -46,6 +47,11 @@ func main() {
 
 	// create context to cancel commands on sigterm
 	ctx := foundation.InitCancellationContext(context.Background())
+
+	if !*scan {
+		log.Info().Msg("Scanning is disabled, exiting")
+		return
+	}
 
 	// get api token from injected credentials
 	credentialsClient := credentials.NewClient(*snykAPITokenPath)
