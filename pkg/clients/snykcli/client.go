@@ -42,10 +42,10 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	// err = c.monitorCore(ctx, flags, "snyk container monitor", false)
-	// if err != nil {
-	// 	return
-	// }
+	err = c.monitorCore(ctx, flags, "snyk container monitor", false)
+	if err != nil {
+		return
+	}
 
 	// err = c.monitorCore(ctx, flags, "snyk iac monitor", false)
 	// if err != nil {
@@ -61,10 +61,10 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	// err = c.testCore(ctx, flags, "snyk container test", false)
-	// if err != nil {
-	// 	return
-	// }
+	err = c.testCore(ctx, flags, "snyk container test", false)
+	if err != nil {
+		return
+	}
 
 	// err = c.testCore(ctx, flags, "snyk iac test", false)
 	// if err != nil {
@@ -76,7 +76,7 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 
 func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	if flags.GroupName != "" {
+	if allProjects && flags.GroupName != "" {
 		command += " --remote-repo-url=" + flags.GroupName
 	}
 	if allProjects {
@@ -110,7 +110,7 @@ func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command s
 
 func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	if flags.GroupName != "" {
+	if allProjects && flags.GroupName != "" {
 		command += " --remote-repo-url=" + flags.GroupName
 	}
 	if allProjects {
