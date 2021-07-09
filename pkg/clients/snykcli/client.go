@@ -2,6 +2,7 @@ package snykcli
 
 import (
 	"context"
+	"os/exec"
 	"strings"
 
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
@@ -90,6 +91,17 @@ func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command s
 
 	err = foundation.RunCommandExtended(ctx, command)
 	if err != nil {
+		// EXIT CODES
+		// Possible exit codes and their meaning:
+
+		// 0: success, no vulns found
+		// 1: action_needed, vulns found
+		// 2: failure, try to re-run command
+		// 3: failure, no supported projects detected
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
+			return nil
+		}
+
 		return
 	}
 
@@ -122,6 +134,17 @@ func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command stri
 
 	err = foundation.RunCommandExtended(ctx, command)
 	if err != nil {
+		// EXIT CODES
+		// Possible exit codes and their meaning:
+
+		// 0: success, no vulns found
+		// 1: action_needed, vulns found
+		// 2: failure, try to re-run command
+		// 3: failure, no supported projects detected
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
+			return nil
+		}
+
 		return
 	}
 
