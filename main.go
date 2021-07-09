@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -75,7 +76,7 @@ func main() {
 		Debug:              *debug,
 	}
 
-	flags, err = extensionService.AugmentFlags(ctx, flags)
+	flags, err = extensionService.AugmentFlags(ctx, flags, os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME"))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed augmenting flags")
 	}

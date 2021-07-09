@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	"github.com/estafette/estafette-extension-snyk/api"
@@ -22,7 +21,7 @@ var (
 )
 
 type Service interface {
-	AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error)
+	AugmentFlags(ctx context.Context, flags api.SnykFlags, repoOwner, repoName string) (api.SnykFlags, error)
 	Run(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
@@ -38,7 +37,7 @@ type service struct {
 	snykcliClient     snykcli.Client
 }
 
-func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.SnykFlags, error) {
+func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, repoOwner, repoName string) (api.SnykFlags, error) {
 
 	log.Info().Msg("Detecting language...")
 
@@ -50,8 +49,6 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags) (api.Sn
 
 	log.Info().Msgf("Detected %v application", flags.Language)
 
-	repoOwner := os.Getenv("ESTAFETTE_GIT_OWNER")
-	repoName := os.Getenv("ESTAFETTE_GIT_NAME")
 	if flags.ProjectName == "" && repoOwner != "" && repoName != "" {
 		flags.ProjectName = fmt.Sprintf("%v/%v", repoOwner, repoName)
 		log.Info().Msgf("Automatically set projectName to %v", flags.ProjectName)
@@ -189,6 +186,15 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 	err = s.snykcliClient.Auth(ctx)
 	if err != nil {
 		return
+	}
+
+	err = s.snykcliClient.Monitor(ctx, flags)
+	if err != nil {
+		if flags.Language.IgnoreErrors() {
+			log.Warn().Err(err).Msgf("Failed monitoring %v application, ignoring until language is fully supported...", flags.Language)
+		} else {
+			return
+		}
 	}
 
 	err = s.snykcliClient.Test(ctx, flags)
