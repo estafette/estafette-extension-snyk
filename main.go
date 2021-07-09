@@ -65,7 +65,7 @@ func main() {
 	flags := api.SnykFlags{
 		FailOn:            *failOn,
 		PackagesFolder:    *packagesFolder,
-		GroupName:         fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
+		GroupName:         fmt.Sprintf("%v/%v", os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
 		SeverityThreshold: *severityThreshold,
 		Debug:             *debug,
 	}
