@@ -39,15 +39,15 @@ type service struct {
 
 func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, repoOwner, repoName string) (api.SnykFlags, error) {
 
-	log.Info().Msg("Detecting language...")
+	log.Info().Msg("Detecting sub-projects...")
 
 	var err error
-	flags.Language, err = s.detectLanguage(ctx)
+	flags.SubProjects, err = s.detectSubProjects(ctx)
 	if err != nil {
 		return flags, err
 	}
 
-	log.Info().Msgf("Detected %v application", flags.Language)
+	log.Info().Msgf("Detected %v sub-projects", len(flags.SubProjects))
 
 	if flags.ProjectName == "" && repoOwner != "" && repoName != "" {
 		flags.ProjectName = fmt.Sprintf("%v/%v", repoOwner, repoName)
@@ -57,43 +57,38 @@ func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, repoOwn
 	return flags, nil
 }
 
-func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
+func (s *service) detectSubProjects(ctx context.Context) (map[api.PackageManager][]string, error) {
 
-	// go.mod => golang
-	if foundation.FileExists("go.mod") {
-		return api.LanguageGolang, nil
+	// https://github.com/snyk/snyk/blob/97808254747dd7db8c7033e76dafcd46a7976d54/src/lib/package-managers.ts#L19-L49
+	// https://github.com/snyk/snyk/blob/97808254747dd7db8c7033e76dafcd46a7976d54/src/lib/detect.ts#L68-L100
+	supportedPackageManagerFiles := map[api.PackageManager][]string{
+		api.PackageManagerNpm:       []string{"package.json"},
+		api.PackageManagerMaven:     []string{"pom.xml"},
+		api.PackageManagerPip:       []string{"requirements.txt", "Pipfile", "setup.py"},
+		api.PackageManagerGoModules: []string{"go.mod"},
+		api.PackageManagerNuget:     []string{"project.assets.json", "packages.config", "project.json", "*.sln"},
+		api.PackageManagerDocker:    []string{"Dockerfile*"},
 	}
 
-	// package.json => node
-	if foundation.FileExists("package.json") {
-		return api.LanguageNode, nil
+	detectedSubProjects := map[api.PackageManager][]string{}
+	for pm, sf := range supportedPackageManagerFiles {
+		for _, sfi := range sf {
+			matches, err := s.findFileMatches(".", sfi)
+			if err != nil {
+				continue
+			}
+			if len(matches) > 0 {
+				// ensure the map entry is initialized
+				if _, ok := detectedSubProjects[pm]; !ok {
+					detectedSubProjects[pm] = []string{}
+				}
+
+				detectedSubProjects[pm] = append(detectedSubProjects[pm], matches...)
+			}
+		}
 	}
 
-	// pom.xml => maven
-	if foundation.FileExists("pom.xml") {
-		return api.LanguageMaven, nil
-	}
-
-	// *.sln => dotnet
-	matches, err := s.findFileMatches(".", "*.sln")
-	if err != nil {
-		return api.LanguageUnknown, err
-	}
-	if len(matches) > 0 {
-		return api.LanguageDotnet, nil
-	}
-
-	// requirements.txt => python
-	if foundation.FileExists("requirements.txt") {
-		return api.LanguagePython, nil
-	}
-
-	// Dockerfile => docker
-	if foundation.FileExists("Dockerfile") {
-		return api.LanguageDocker, nil
-	}
-
-	return api.LanguageUnknown, nil
+	return detectedSubProjects, nil
 }
 
 func (s *service) findFileMatches(root, pattern string) ([]string, error) {
@@ -121,64 +116,73 @@ func (s *service) findFileMatches(root, pattern string) ([]string, error) {
 
 func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
-	// run language specific actions
-	switch flags.Language {
-	case api.LanguageUnknown:
-		log.Info().Msg("Could not find supported language, exiting...")
+	// run package manager specific actions
+	if len(flags.SubProjects) == 0 {
+		log.Info().Msg("Could not find supported package manager files, exiting...")
 		return
+	}
 
-	case api.LanguageMaven:
-		var credential api.APITokenCredentials
-		credential, err = s.credentialsClient.GetCredential(ctx)
-		if err != nil {
-			return
-		}
+	for pm, paths := range flags.SubProjects {
+		switch pm {
+		case api.PackageManagerMaven:
+			if !foundation.FileExists("/root/.m2/settings.xml") {
+				var credential api.APITokenCredentials
+				credential, err = s.credentialsClient.GetCredential(ctx)
+				if err != nil {
+					return
+				}
 
-		if credential.AdditionalProperties.MavenMirrorUrl != "" && credential.AdditionalProperties.MavenUsername != "" && credential.AdditionalProperties.MavenPassword != "" {
-			log.Info().Msg("Initializing maven settings...")
-			foundation.RunCommand(ctx, "mkdir -p /root/.m2")
+				if credential.AdditionalProperties.MavenMirrorUrl != "" && credential.AdditionalProperties.MavenUsername != "" && credential.AdditionalProperties.MavenPassword != "" {
+					log.Info().Msg("Initializing maven settings...")
+					foundation.RunCommand(ctx, "mkdir -p /root/.m2")
 
-			log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", credential.AdditionalProperties.MavenMirrorUrl, credential.AdditionalProperties.MavenUsername, credential.AdditionalProperties.MavenPassword)
-			settingsTemplate, err := template.New("settings.xml").ParseFiles("/settings.xml")
-			if err != nil {
-				log.Fatal().Err(err).Msg("Failed parsing settings.xml")
+					log.Info().Msgf("Generating settings.xml with url %v, username %v, password %v", credential.AdditionalProperties.MavenMirrorUrl, credential.AdditionalProperties.MavenUsername, credential.AdditionalProperties.MavenPassword)
+					settingsTemplate, err := template.New("settings.xml").ParseFiles("/settings.xml")
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed parsing settings.xml")
+					}
+
+					data := struct {
+						MirrorUrl string
+						Username  string
+						Password  string
+					}{credential.AdditionalProperties.MavenMirrorUrl, credential.AdditionalProperties.MavenUsername, credential.AdditionalProperties.MavenPassword}
+
+					var renderedSettings bytes.Buffer
+					err = settingsTemplate.Execute(&renderedSettings, data)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed rendering settings.xml")
+					}
+
+					err = ioutil.WriteFile("/root/.m2/settings.xml", renderedSettings.Bytes(), 0644)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed writing settings.xml")
+					}
+				}
 			}
 
-			data := struct {
-				MirrorUrl string
-				Username  string
-				Password  string
-			}{credential.AdditionalProperties.MavenMirrorUrl, credential.AdditionalProperties.MavenUsername, credential.AdditionalProperties.MavenPassword}
-
-			var renderedSettings bytes.Buffer
-			err = settingsTemplate.Execute(&renderedSettings, data)
-			if err != nil {
-				log.Fatal().Err(err).Msg("Failed rendering settings.xml")
+		case api.PackageManagerNuget:
+			for _, path := range paths {
+				innerErr := foundation.RunCommandExtended(ctx, "dotnet restore --packages .nuget/packages %v", path)
+				if innerErr != nil {
+					if pm.IgnoreErrors() {
+						log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until package manager is fully supported...", pm)
+					} else {
+						return innerErr
+					}
+				}
 			}
 
-			err = ioutil.WriteFile("/root/.m2/settings.xml", renderedSettings.Bytes(), 0644)
-			if err != nil {
-				log.Fatal().Err(err).Msg("Failed writing settings.xml")
-			}
-		}
-
-	case api.LanguageDotnet:
-		innerErr := foundation.RunCommandExtended(ctx, "dotnet restore --packages .nuget/packages")
-		if innerErr != nil {
-			if flags.Language.IgnoreErrors() {
-				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until language is fully supported...", flags.Language)
-			} else {
-				return innerErr
-			}
-		}
-
-	case api.LanguagePython:
-		innerErr := foundation.RunCommandExtended(ctx, "pip install -r requirements.txt")
-		if innerErr != nil {
-			if flags.Language.IgnoreErrors() {
-				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until language is fully supported...", flags.Language)
-			} else {
-				return innerErr
+		case api.PackageManagerPip:
+			for _, path := range paths {
+				innerErr := foundation.RunCommandExtended(ctx, "pip install -r %v", path)
+				if innerErr != nil {
+					if pm.IgnoreErrors() {
+						log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until package manager is fully supported...", pm)
+					} else {
+						return innerErr
+					}
+				}
 			}
 		}
 	}
@@ -188,22 +192,14 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = s.snykcliClient.Monitor(ctx, flags)
-	if err != nil {
-		if flags.Language.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed monitoring %v application, ignoring until language is fully supported...", flags.Language)
-		} else {
-			return
-		}
-	}
-
 	err = s.snykcliClient.Test(ctx, flags)
 	if err != nil {
-		if flags.Language.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed testing %v application, ignoring until language is fully supported...", flags.Language)
-		} else {
-			return
-		}
+		return
+	}
+
+	err = s.snykcliClient.Monitor(ctx, flags)
+	if err != nil {
+		return
 	}
 
 	return nil

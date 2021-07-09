@@ -69,24 +69,24 @@ const (
 	SeverityMedium Severity = "medium"
 )
 
-type Language int
+type PackageManager int
 
 const (
-	LanguageUnknown Language = iota
-	LanguageGolang
-	LanguageNode
-	LanguageMaven
-	LanguageDotnet
-	LanguagePython
-	LanguageDocker
+	PackageManagerUnknown PackageManager = iota
+	PackageManagerNpm
+	PackageManagerMaven
+	PackageManagerPip
+	PackageManagerGoModules
+	PackageManagerNuget
+	PackageManagerDocker
 )
 
-func (l Language) IgnoreErrors() bool {
-	return l == LanguagePython
+func (l PackageManager) IgnoreErrors() bool {
+	return l == PackageManagerPip
 }
 
-func (l Language) String() string {
-	return [...]string{"Unknown", "Golang", "Node", "Maven", "Dotnet", "Python", "Docker"}[l]
+func (l PackageManager) String() string {
+	return [...]string{"Unknown", "Npm", "Maven", "Pip", "GoModules", "Nuget", "Docker"}[l]
 }
 
 type Tag struct {
@@ -95,13 +95,10 @@ type Tag struct {
 }
 
 type SnykFlags struct {
-	Language           Language
-	FailOn             string
-	File               string
-	PackagesFolder     string
-	ProjectName        string
-	SeverityThreshold  string
-	AllProjects        bool
-	ExcludeDirectories []string
-	Debug              bool
+	SubProjects       map[PackageManager][]string
+	FailOn            string
+	PackagesFolder    string
+	ProjectName       string
+	SeverityThreshold string
+	Debug             bool
 }

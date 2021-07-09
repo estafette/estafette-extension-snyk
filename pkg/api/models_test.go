@@ -8,30 +8,30 @@ import (
 
 func TestLanguageString(t *testing.T) {
 	t.Run("UnknownReturnsUnknown", func(t *testing.T) {
-		assert.Equal(t, "Unknown", LanguageUnknown.String())
+		assert.Equal(t, "Unknown", PackageManagerUnknown.String())
 	})
 
 	t.Run("GolangReturnsGolang", func(t *testing.T) {
-		assert.Equal(t, "Golang", LanguageGolang.String())
+		assert.Equal(t, "GoModules", PackageManagerGoModules.String())
 	})
 
 	t.Run("NodeReturnsNode", func(t *testing.T) {
-		assert.Equal(t, "Node", LanguageNode.String())
+		assert.Equal(t, "Npm", PackageManagerNpm.String())
 	})
 
 	t.Run("MavenReturnsMaven", func(t *testing.T) {
-		assert.Equal(t, "Maven", LanguageMaven.String())
+		assert.Equal(t, "Maven", PackageManagerMaven.String())
 	})
 
 	t.Run("DotnetReturnsDotnet", func(t *testing.T) {
-		assert.Equal(t, "Dotnet", LanguageDotnet.String())
+		assert.Equal(t, "Nuget", PackageManagerNuget.String())
 	})
 
 	t.Run("PythonReturnsPython", func(t *testing.T) {
-		assert.Equal(t, "Python", LanguagePython.String())
+		assert.Equal(t, "Pip", PackageManagerPip.String())
 	})
 
 	t.Run("DockerReturnsDocker", func(t *testing.T) {
-		assert.Equal(t, "Docker", LanguageDocker.String())
+		assert.Equal(t, "Docker", PackageManagerDocker.String())
 	})
 }
