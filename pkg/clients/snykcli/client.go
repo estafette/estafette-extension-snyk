@@ -36,17 +36,17 @@ func (c *client) Auth(ctx context.Context) (err error) {
 }
 
 func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
-	err = c.monitorCore(ctx, flags, "snyk monitor")
+	err = c.monitorCore(ctx, flags, "snyk monitor", true)
 	if err != nil {
 		return
 	}
 
-	err = c.monitorCore(ctx, flags, "snyk container monitor")
+	err = c.monitorCore(ctx, flags, "snyk container monitor", false)
 	if err != nil {
 		return
 	}
 
-	err = c.monitorCore(ctx, flags, "snyk iac monitor")
+	err = c.monitorCore(ctx, flags, "snyk iac monitor", false)
 	if err != nil {
 		return
 	}
@@ -55,17 +55,17 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 }
 
 func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
-	err = c.testCore(ctx, flags, "snyk test")
+	err = c.testCore(ctx, flags, "snyk test", true)
 	if err != nil {
 		return
 	}
 
-	err = c.testCore(ctx, flags, "snyk container test")
+	err = c.testCore(ctx, flags, "snyk container test", false)
 	if err != nil {
 		return
 	}
 
-	err = c.testCore(ctx, flags, "snyk iac test")
+	err = c.testCore(ctx, flags, "snyk iac test", false)
 	if err != nil {
 		return
 	}
@@ -73,11 +73,16 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	return nil
 }
 
-func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command string) (err error) {
+func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	command += " --all-projects"
 	if flags.GroupName != "" {
 		command += " --remote-repo-url=" + flags.GroupName
+	}
+	if allProjects {
+		command += " --all-projects"
+	}
+	if allProjects && len(flags.ExcludeDirectories) > 0 {
+		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
 	}
 	if flags.Debug {
 		command += " -d"
@@ -91,13 +96,15 @@ func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command s
 	return
 }
 
-func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command string) (err error) {
+func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	command += " --all-projects"
 	if flags.GroupName != "" {
 		command += " --remote-repo-url=" + flags.GroupName
 	}
-	if len(flags.ExcludeDirectories) > 0 {
+	if allProjects {
+		command += " --all-projects"
+	}
+	if allProjects && len(flags.ExcludeDirectories) > 0 {
 		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
 	}
 	if flags.FailOn != "" {
