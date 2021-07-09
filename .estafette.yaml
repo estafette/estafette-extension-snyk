@@ -12,10 +12,6 @@ version:
     minor: 1
 
 stages:
-  snyk:
-    image: extensions/snyk:stable
-    severityThreshold: low
-
   build:
     image: golang:1.16-alpine
     env:
@@ -46,6 +42,10 @@ stages:
     container: snyk
     repositories:
     - extensions
+
+  snyk:
+    image: extensions/snyk:stable
+    severityThreshold: low
 
 releases:
   dev:
