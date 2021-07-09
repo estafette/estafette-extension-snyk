@@ -71,7 +71,7 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 	if flags.SeverityThreshold != "" {
 		command += " --severity-threshold=" + flags.SeverityThreshold
 	}
-	if flags.AllProjects {
+	if flags.ProjectName == "" && flags.AllProjects {
 		command += " --all-projects"
 	}
 	if len(flags.ExcludeDirectories) > 0 {
