@@ -2,6 +2,7 @@ package snykcli
 
 import (
 	"context"
+	"os/exec"
 	"strings"
 
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
@@ -36,45 +37,52 @@ func (c *client) Auth(ctx context.Context) (err error) {
 }
 
 func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
-	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	command := "snyk monitor"
-	if flags.ProjectName != "" {
-		command += " --project-name=" + flags.ProjectName
-	}
-	if flags.Debug {
-		command += " -d"
-	}
-
-	err = foundation.RunCommandExtended(ctx, command)
+	err = c.monitorCore(ctx, flags, "snyk monitor", true)
 	if err != nil {
 		return
 	}
 
-	return
+	// err = c.monitorCore(ctx, flags, "snyk container monitor "+flags.GroupName, false)
+	// if err != nil {
+	// 	return
+	// }
+
+	// err = c.monitorCore(ctx, flags, "snyk iac monitor", false)
+	// if err != nil {
+	// 	return
+	// }
+
+	return nil
 }
 
 func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
+	err = c.testCore(ctx, flags, "snyk test", true)
+	if err != nil {
+		return
+	}
+
+	// err = c.testCore(ctx, flags, "snyk container test "+flags.GroupName, false)
+	// if err != nil {
+	// 	return
+	// }
+
+	// err = c.testCore(ctx, flags, "snyk iac test", false)
+	// if err != nil {
+	// 	return
+	// }
+
+	return nil
+}
+
+func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	command := "snyk test"
-	if flags.ProjectName != "" {
-		command += " --project-name=" + flags.ProjectName
+	if allProjects && flags.GroupName != "" {
+		command += " --remote-repo-url=" + flags.GroupName
 	}
-	if flags.FailOn != "" {
-		command += " --fail-on=" + flags.FailOn
-	}
-	if flags.File != "" {
-		command += " --file=" + flags.File
-	}
-	if flags.PackagesFolder != "" {
-		command += " --packages-folder=" + flags.PackagesFolder
-	}
-	if flags.SeverityThreshold != "" {
-		command += " --severity-threshold=" + flags.SeverityThreshold
-	}
-	if flags.ProjectName == "" && flags.AllProjects {
+	if allProjects {
 		command += " --all-projects"
 	}
-	if flags.ProjectName == "" && flags.AllProjects && len(flags.ExcludeDirectories) > 0 {
+	if allProjects && len(flags.ExcludeDirectories) > 0 {
 		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
 	}
 	if flags.Debug {
@@ -83,6 +91,60 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 
 	err = foundation.RunCommandExtended(ctx, command)
 	if err != nil {
+		// EXIT CODES
+		// Possible exit codes and their meaning:
+
+		// 0: success, no vulns found
+		// 1: action_needed, vulns found
+		// 2: failure, try to re-run command
+		// 3: failure, no supported projects detected
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
+			return nil
+		}
+
+		return
+	}
+
+	return
+}
+
+func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
+	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
+	if allProjects && flags.GroupName != "" {
+		command += " --remote-repo-url=" + flags.GroupName
+	}
+	if allProjects {
+		command += " --all-projects"
+	}
+	if allProjects && len(flags.ExcludeDirectories) > 0 {
+		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
+	}
+	if flags.FailOn != "" {
+		command += " --fail-on=" + flags.FailOn
+	}
+	if flags.PackagesFolder != "" {
+		command += " --packages-folder=" + flags.PackagesFolder
+	}
+	if flags.SeverityThreshold != "" {
+		command += " --severity-threshold=" + flags.SeverityThreshold
+	}
+	if flags.Debug {
+		command += " -d"
+	}
+
+	err = foundation.RunCommandExtended(ctx, command)
+	if err != nil {
+		// EXIT CODES
+		// Possible exit codes and their meaning:
+
+		// 0: success, no vulns found
+		// 1: action_needed, vulns found
+		// 2: failure, try to re-run command
+		// 3: failure, no supported projects detected
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
+			return nil
+		}
+
 		return
 	}
 

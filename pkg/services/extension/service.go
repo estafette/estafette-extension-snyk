@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
@@ -21,7 +20,6 @@ var (
 )
 
 type Service interface {
-	AugmentFlags(ctx context.Context, flags api.SnykFlags, repoOwner, repoName string) (api.SnykFlags, error)
 	Run(ctx context.Context, flags api.SnykFlags) (err error)
 }
 
@@ -35,65 +33,6 @@ func NewService(credentialsClient credentials.Client, snykcliClient snykcli.Clie
 type service struct {
 	credentialsClient credentials.Client
 	snykcliClient     snykcli.Client
-}
-
-func (s *service) AugmentFlags(ctx context.Context, flags api.SnykFlags, repoOwner, repoName string) (api.SnykFlags, error) {
-
-	log.Info().Msg("Detecting language...")
-
-	var err error
-	flags.Language, err = s.detectLanguage(ctx)
-	if err != nil {
-		return flags, err
-	}
-
-	log.Info().Msgf("Detected %v application", flags.Language)
-
-	if flags.ProjectName == "" && repoOwner != "" && repoName != "" {
-		flags.ProjectName = fmt.Sprintf("%v/%v", repoOwner, repoName)
-		log.Info().Msgf("Automatically set projectName to %v", flags.ProjectName)
-	}
-
-	return flags, nil
-}
-
-func (s *service) detectLanguage(ctx context.Context) (api.Language, error) {
-
-	// go.mod => golang
-	if foundation.FileExists("go.mod") {
-		return api.LanguageGolang, nil
-	}
-
-	// package.json => node
-	if foundation.FileExists("package.json") {
-		return api.LanguageNode, nil
-	}
-
-	// pom.xml => maven
-	if foundation.FileExists("pom.xml") {
-		return api.LanguageMaven, nil
-	}
-
-	// *.sln => dotnet
-	matches, err := s.findFileMatches(".", "*.sln")
-	if err != nil {
-		return api.LanguageUnknown, err
-	}
-	if len(matches) > 0 {
-		return api.LanguageDotnet, nil
-	}
-
-	// requirements.txt => python
-	if foundation.FileExists("requirements.txt") {
-		return api.LanguagePython, nil
-	}
-
-	// Dockerfile => docker
-	if foundation.FileExists("Dockerfile") {
-		return api.LanguageDocker, nil
-	}
-
-	return api.LanguageUnknown, nil
 }
 
 func (s *service) findFileMatches(root, pattern string) ([]string, error) {
@@ -121,13 +60,63 @@ func (s *service) findFileMatches(root, pattern string) ([]string, error) {
 
 func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
-	// run language specific actions
-	switch flags.Language {
-	case api.LanguageUnknown:
-		log.Info().Msg("Could not find supported language, exiting...")
+	// do some prep work for certain package managers
+	err = s.prepare(ctx, flags)
+	if err != nil {
 		return
+	}
 
-	case api.LanguageMaven:
+	err = s.snykcliClient.Auth(ctx)
+	if err != nil {
+		return
+	}
+
+	err = s.snykcliClient.Monitor(ctx, flags)
+	if err != nil {
+		return
+	}
+
+	err = s.snykcliClient.Test(ctx, flags)
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) {
+	// https://github.com/snyk/snyk/blob/97808254747dd7db8c7033e76dafcd46a7976d54/src/lib/package-managers.ts#L19-L49
+	// https://github.com/snyk/snyk/blob/97808254747dd7db8c7033e76dafcd46a7976d54/src/lib/detect.ts#L68-L100
+
+	err = s.prepareMaven(ctx, flags)
+	if err != nil {
+		return
+	}
+
+	err = s.prepareNuget(ctx, flags)
+	if err != nil {
+		return
+	}
+
+	err = s.preparePip(ctx, flags)
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err error) {
+	matches, err := s.findFileMatches(".", "pom.xml")
+	if err != nil {
+		return
+	}
+
+	if len(matches) == 0 {
+		return
+	}
+
+	if !foundation.FileExists("/root/.m2/settings.xml") {
 		var credential api.APITokenCredentials
 		credential, err = s.credentialsClient.GetCredential(ctx)
 		if err != nil {
@@ -161,48 +150,45 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 				log.Fatal().Err(err).Msg("Failed writing settings.xml")
 			}
 		}
-
-	case api.LanguageDotnet:
-		innerErr := foundation.RunCommandExtended(ctx, "dotnet restore --packages .nuget/packages")
-		if innerErr != nil {
-			if flags.Language.IgnoreErrors() {
-				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until language is fully supported...", flags.Language)
-			} else {
-				return innerErr
-			}
-		}
-
-	case api.LanguagePython:
-		innerErr := foundation.RunCommandExtended(ctx, "pip install -r requirements.txt")
-		if innerErr != nil {
-			if flags.Language.IgnoreErrors() {
-				log.Warn().Err(innerErr).Msgf("Failed preparing %v application, ignoring until language is fully supported...", flags.Language)
-			} else {
-				return innerErr
-			}
-		}
 	}
 
-	err = s.snykcliClient.Auth(ctx)
+	return nil
+}
+
+func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err error) {
+	matches, err := s.findFileMatches(".", "*.sln|project.assets.json|packages.config|project.json")
 	if err != nil {
 		return
 	}
 
-	err = s.snykcliClient.Monitor(ctx, flags)
-	if err != nil {
-		if flags.Language.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed monitoring %v application, ignoring until language is fully supported...", flags.Language)
-		} else {
-			return
+	if len(matches) == 0 {
+		return
+	}
+
+	for _, path := range matches {
+		innerErr := foundation.RunCommandExtended(ctx, "dotnet restore --packages .nuget/packages %v", path)
+		if innerErr != nil {
+			return innerErr
 		}
 	}
 
-	err = s.snykcliClient.Test(ctx, flags)
+	return nil
+}
+
+func (s *service) preparePip(ctx context.Context, flags api.SnykFlags) (err error) {
+	matches, err := s.findFileMatches(".", "requirements.txt|Pipfile|setup.py")
 	if err != nil {
-		if flags.Language.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed testing %v application, ignoring until language is fully supported...", flags.Language)
-		} else {
-			return
+		return
+	}
+
+	if len(matches) == 0 {
+		return
+	}
+
+	for _, path := range matches {
+		innerErr := foundation.RunCommandExtended(ctx, "pip install -r %v", path)
+		if innerErr != nil {
+			log.Warn().Err(innerErr).Msgf("Failed preparing python application, ignoring until pip package manager is fully supported...")
 		}
 	}
 

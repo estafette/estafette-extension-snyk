@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/alecthomas/kingpin"
@@ -25,11 +26,8 @@ var (
 var (
 	// parameters
 	failOn             = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
-	file               = kingpin.Flag("file", "Path to file to run analysis for.").Envar("ESTAFETTE_EXTENSION_FILE").String()
 	packagesFolder     = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
-	projectName        = kingpin.Flag("project-name", "Specify a custom Snyk project name.").Envar("ESTAFETTE_EXTENSION_PROJECT_NAME").String()
 	severityThreshold  = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
-	allProjects        = kingpin.Flag("all-projects", "Scan for all types of supported projects.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_ALL_PROJECTS").Bool()
 	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").Strings()
 	debug              = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
 	scan               = kingpin.Flag("scan", "Scan repository for vulnerabilities.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SCAN").Bool()
@@ -65,20 +63,11 @@ func main() {
 	extensionService := extension.NewService(credentialsClient, snykcliClient)
 
 	flags := api.SnykFlags{
-		Language:           api.LanguageUnknown,
-		FailOn:             *failOn,
-		File:               *file,
-		PackagesFolder:     *packagesFolder,
-		ProjectName:        *projectName,
-		SeverityThreshold:  *severityThreshold,
-		AllProjects:        *allProjects,
-		ExcludeDirectories: *excludeDirectories,
-		Debug:              *debug,
-	}
-
-	flags, err = extensionService.AugmentFlags(ctx, flags, os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME"))
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed augmenting flags")
+		FailOn:            *failOn,
+		PackagesFolder:    *packagesFolder,
+		GroupName:         fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
+		SeverityThreshold: *severityThreshold,
+		Debug:             *debug,
 	}
 
 	err = extensionService.Run(ctx, flags)

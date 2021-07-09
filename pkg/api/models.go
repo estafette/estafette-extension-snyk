@@ -69,39 +69,16 @@ const (
 	SeverityMedium Severity = "medium"
 )
 
-type Language int
-
-const (
-	LanguageUnknown Language = iota
-	LanguageGolang
-	LanguageNode
-	LanguageMaven
-	LanguageDotnet
-	LanguagePython
-	LanguageDocker
-)
-
-func (l Language) IgnoreErrors() bool {
-	return l == LanguagePython
-}
-
-func (l Language) String() string {
-	return [...]string{"Unknown", "Golang", "Node", "Maven", "Dotnet", "Python", "Docker"}[l]
-}
-
 type Tag struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
 
 type SnykFlags struct {
-	Language           Language
 	FailOn             string
-	File               string
 	PackagesFolder     string
-	ProjectName        string
-	SeverityThreshold  string
-	AllProjects        bool
+	GroupName          string
 	ExcludeDirectories []string
+	SeverityThreshold  string
 	Debug              bool
 }
