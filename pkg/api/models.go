@@ -69,36 +69,16 @@ const (
 	SeverityMedium Severity = "medium"
 )
 
-type PackageManager int
-
-const (
-	PackageManagerUnknown PackageManager = iota
-	PackageManagerNpm
-	PackageManagerMaven
-	PackageManagerPip
-	PackageManagerGoModules
-	PackageManagerNuget
-	PackageManagerDocker
-)
-
-func (l PackageManager) IgnoreErrors() bool {
-	return l == PackageManagerPip
-}
-
-func (l PackageManager) String() string {
-	return [...]string{"Unknown", "Npm", "Maven", "Pip", "GoModules", "Nuget", "Docker"}[l]
-}
-
 type Tag struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
 
 type SnykFlags struct {
-	SubProjects       map[PackageManager][]string
-	FailOn            string
-	PackagesFolder    string
-	ProjectName       string
-	SeverityThreshold string
-	Debug             bool
+	FailOn             string
+	PackagesFolder     string
+	GroupName          string
+	ExcludeDirectories []string
+	SeverityThreshold  string
+	Debug              bool
 }

@@ -2,10 +2,10 @@ package snykcli
 
 import (
 	"context"
+	"strings"
 
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
 	foundation "github.com/estafette/estafette-foundation"
-	"github.com/rs/zerolog/log"
 )
 
 type Client interface {
@@ -36,10 +36,48 @@ func (c *client) Auth(ctx context.Context) (err error) {
 }
 
 func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
+	err = c.monitorCore(ctx, flags, "snyk monitor")
+	if err != nil {
+		return
+	}
+
+	err = c.monitorCore(ctx, flags, "snyk container monitor")
+	if err != nil {
+		return
+	}
+
+	err = c.monitorCore(ctx, flags, "snyk iac monitor")
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
+	err = c.testCore(ctx, flags, "snyk test")
+	if err != nil {
+		return
+	}
+
+	err = c.testCore(ctx, flags, "snyk container test")
+	if err != nil {
+		return
+	}
+
+	err = c.testCore(ctx, flags, "snyk iac test")
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command string) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	command := "snyk monitor"
-	if flags.ProjectName != "" {
-		command += " --project-name=" + flags.ProjectName
+	command += " --all-projects"
+	if flags.GroupName != "" {
+		command += " --remote-repo-url=" + flags.GroupName
 	}
 	if flags.Debug {
 		command += " -d"
@@ -53,28 +91,14 @@ func (c *client) Monitor(ctx context.Context, flags api.SnykFlags) (err error) {
 	return
 }
 
-func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
-	for pm, paths := range flags.SubProjects {
-		for _, path := range paths {
-			err = c.testCore(ctx, flags, pm, path)
-			if err != nil {
-				return
-			}
-		}
-	}
-
-	return nil
-}
-
-func (c *client) testCore(ctx context.Context, flags api.SnykFlags, packageManager api.PackageManager, path string) (err error) {
+func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command string) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
-	command := "snyk test"
-	if packageManager == api.PackageManagerDocker {
-		command = "snyk container test"
+	command += " --all-projects"
+	if flags.GroupName != "" {
+		command += " --remote-repo-url=" + flags.GroupName
 	}
-	command += " --file=" + path
-	if flags.ProjectName != "" {
-		command += " --project-name=" + flags.ProjectName
+	if len(flags.ExcludeDirectories) > 0 {
+		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
 	}
 	if flags.FailOn != "" {
 		command += " --fail-on=" + flags.FailOn
@@ -91,10 +115,6 @@ func (c *client) testCore(ctx context.Context, flags api.SnykFlags, packageManag
 
 	err = foundation.RunCommandExtended(ctx, command)
 	if err != nil {
-		if packageManager.IgnoreErrors() {
-			log.Warn().Err(err).Msgf("Failed testing %v application, ignoring until package manager is fully supported...", packageManager)
-			return nil
-		}
 		return
 	}
 
