@@ -69,6 +69,9 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 func (c *client) testCore(ctx context.Context, flags api.SnykFlags, packageManager api.PackageManager, path string) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
 	command := "snyk test"
+	if packageManager == api.PackageManagerDocker {
+		command = "snyk container test"
+	}
 	command += " --file=" + path
 	if flags.ProjectName != "" {
 		command += " --project-name=" + flags.ProjectName
