@@ -102,6 +102,11 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 		return
 	}
 
+	err = s.prepareNpm(ctx, flags)
+	if err != nil {
+		return
+	}
+
 	// err = s.prepareNuget(ctx, flags)
 	// if err != nil {
 	// 	return
@@ -158,6 +163,26 @@ func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err er
 			if err != nil {
 				log.Fatal().Err(err).Msg("Failed writing settings.xml")
 			}
+		}
+	}
+
+	return nil
+}
+
+func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err error) {
+	matches, err := s.findFileMatches(".", []string{"package-lock.json"})
+	if err != nil {
+		return
+	}
+
+	if len(matches) == 0 {
+		return
+	}
+
+	for _, path := range matches {
+		innerErr := foundation.RunCommandInDirectoryExtended(ctx, filepath.Dir(path), "npm ci")
+		if innerErr != nil {
+			return innerErr
 		}
 	}
 
