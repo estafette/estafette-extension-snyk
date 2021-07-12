@@ -64,10 +64,10 @@ func (s *service) findFileMatches(root string, patterns []string) ([]string, err
 func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
 	// do some prep work for certain package managers
-	// err = s.prepare(ctx, flags)
-	// if err != nil {
-	// 	return
-	// }
+	err = s.prepare(ctx, flags)
+	if err != nil {
+		return
+	}
 
 	err = s.snykcliClient.Auth(ctx)
 	if err != nil {
@@ -102,15 +102,15 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 		return
 	}
 
-	err = s.prepareNuget(ctx, flags)
-	if err != nil {
-		return
-	}
+	// err = s.prepareNuget(ctx, flags)
+	// if err != nil {
+	// 	return
+	// }
 
-	err = s.preparePip(ctx, flags)
-	if err != nil {
-		return
-	}
+	// err = s.preparePip(ctx, flags)
+	// if err != nil {
+	// 	return
+	// }
 
 	return nil
 }
