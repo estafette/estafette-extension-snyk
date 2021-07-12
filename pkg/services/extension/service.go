@@ -170,7 +170,7 @@ func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"package-lock.json"})
+	matches, err := s.findFileMatches(".", []string{"package.json", "package-lock.json"})
 	if err != nil {
 		return
 	}
@@ -180,9 +180,16 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 	}
 
 	for _, path := range matches {
-		innerErr := foundation.RunCommandInDirectoryExtended(ctx, filepath.Dir(path), "npm ci")
-		if innerErr != nil {
-			return innerErr
+		if filepath.Base(path) == "package-lock.json" {
+			innerErr := foundation.RunCommandInDirectoryExtended(ctx, filepath.Dir(path), "npm ci")
+			if innerErr != nil {
+				return innerErr
+			}
+		} else if !foundation.FileExists(filepath.Join(filepath.Dir(path), "package-lock.json")) {
+			innerErr := foundation.RunCommandInDirectoryExtended(ctx, filepath.Dir(path), "npm i")
+			if innerErr != nil {
+				return innerErr
+			}
 		}
 	}
 
