@@ -81,6 +81,7 @@ func (c *client) Test(ctx context.Context, flags api.SnykFlags) (err error) {
 
 func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command string, allProjects bool) (err error) {
 	// snyk auth (https://support.snyk.io/hc/en-us/articles/360003812578-CLI-reference)
+	command += " --quiet"
 	if allProjects && flags.GroupName != "" {
 		command += " --remote-repo-url=" + flags.GroupName
 	}
