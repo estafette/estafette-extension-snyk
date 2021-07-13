@@ -47,7 +47,7 @@ func (s *service) findFileMatches(root string, filenamePatterns []string, skipDi
 			if entry.IsDir() {
 				for _, skipDirectory := range skipDirectories {
 					if strings.Contains(path, skipDirectory) {
-						log.Debug().Msgf("Skipping %v at path %v", entry, path)
+						log.Debug().Msgf("Skipping directory %v", path)
 						return filepath.SkipDir
 					}
 				}
