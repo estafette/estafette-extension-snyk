@@ -37,19 +37,19 @@ type service struct {
 	snykcliClient     snykcli.Client
 }
 
-func (s *service) findFileMatches(root string, filenamePatterns []string, excludeDirectories []string) ([]string, error) {
+func (s *service) findFileMatches(root string, filenamePatterns []string, skipDirectories []string) ([]string, error) {
 	var matches []string
 
 	e := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err == nil {
 			if entry.IsDir() {
-				return nil
-			}
-
-			for _, excludeDirectory := range excludeDirectories {
-				if strings.Contains(path, excludeDirectory) {
-					return nil
+				for _, skipDirectory := range skipDirectories {
+					if strings.Contains(filepath.Dir(path), skipDirectory) {
+						return filepath.SkipDir
+					}
 				}
+
+				return nil
 			}
 
 			for _, filenamePattern := range filenamePatterns {
