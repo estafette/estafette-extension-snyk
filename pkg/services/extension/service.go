@@ -46,7 +46,8 @@ func (s *service) findFileMatches(root string, filenamePatterns []string, skipDi
 		if err == nil {
 			if entry.IsDir() {
 				for _, skipDirectory := range skipDirectories {
-					if strings.Contains(filepath.Dir(path), skipDirectory) {
+					if strings.Contains(path, skipDirectory) {
+						log.Debug().Msgf("Skipping %v at path %v", entry, path)
 						return filepath.SkipDir
 					}
 				}
@@ -69,7 +70,7 @@ func (s *service) findFileMatches(root string, filenamePatterns []string, skipDi
 		return nil, e
 	}
 
-	log.Info().Msgf("Found %v files matching %v excluding directories %v", len(matches), filenamePatterns, skipDirectories)
+	log.Info().Msgf("Found %v files matching %v excluding directories %v: %v", len(matches), filenamePatterns, skipDirectories, matches)
 
 	return matches, nil
 }
@@ -134,8 +135,7 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 }
 
 func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := flags.ExcludeDirectories
-	skipDirectories = append(skipDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
 
 	matches, err := s.findFileMatches(".", []string{"pom.xml"}, skipDirectories)
 	if err != nil {
@@ -186,8 +186,7 @@ func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := flags.ExcludeDirectories
-	skipDirectories = append(skipDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
 
 	matches, err := s.findFileMatches(".", []string{"package.json"}, skipDirectories)
 	if err != nil {
@@ -214,8 +213,7 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 }
 
 func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := flags.ExcludeDirectories
-	skipDirectories = append(skipDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
 
 	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, skipDirectories)
 	if err != nil {
@@ -237,8 +235,7 @@ func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) preparePip(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := flags.ExcludeDirectories
-	skipDirectories = append(skipDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
 
 	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, skipDirectories)
 	if err != nil {
