@@ -40,6 +40,8 @@ type service struct {
 func (s *service) findFileMatches(root string, filenamePatterns []string, skipDirectories []string) ([]string, error) {
 	var matches []string
 
+	log.Info().Msgf("Finding files matching %v excluding directories %v", filenamePatterns, skipDirectories)
+
 	e := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err == nil {
 			if entry.IsDir() {
@@ -66,6 +68,8 @@ func (s *service) findFileMatches(root string, filenamePatterns []string, skipDi
 	if e != nil {
 		return nil, e
 	}
+
+	log.Info().Msgf("Found %v files matching %v excluding directories %v", len(matches), filenamePatterns, skipDirectories)
 
 	return matches, nil
 }
