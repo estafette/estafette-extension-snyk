@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
@@ -28,7 +29,7 @@ var (
 	failOn             = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
 	packagesFolder     = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
 	severityThreshold  = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
-	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").Strings()
+	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").String()
 	debug              = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
 	scan               = kingpin.Flag("scan", "Scan repository for vulnerabilities.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SCAN").Bool()
 
@@ -63,11 +64,12 @@ func main() {
 	extensionService := extension.NewService(credentialsClient, snykcliClient)
 
 	flags := api.SnykFlags{
-		FailOn:            *failOn,
-		PackagesFolder:    *packagesFolder,
-		GroupName:         fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
-		SeverityThreshold: *severityThreshold,
-		Debug:             *debug,
+		FailOn:             *failOn,
+		PackagesFolder:     *packagesFolder,
+		GroupName:          fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
+		SeverityThreshold:  *severityThreshold,
+		ExcludeDirectories: strings.Split(*excludeDirectories, ","),
+		Debug:              *debug,
 	}
 
 	err = extensionService.Run(ctx, flags)
