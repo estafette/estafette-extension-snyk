@@ -39,15 +39,14 @@ type service struct {
 func (s *service) findFileMatches(root string, patterns []string) ([]string, error) {
 	var matches []string
 
-	e := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		log.Debug().Err(err).Str("path", path).Bool("isDir", info.IsDir()).Msg("filepath.Walk")
+	e := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err == nil {
-			if info.IsDir() {
+			if entry.IsDir() {
 				return nil
 			}
 
 			for _, pattern := range patterns {
-				if matched, err := filepath.Match(pattern, info.Name()); err != nil {
+				if matched, err := filepath.Match(pattern, entry.Name()); err != nil {
 					return err
 				} else if matched {
 					matches = append(matches, path)
