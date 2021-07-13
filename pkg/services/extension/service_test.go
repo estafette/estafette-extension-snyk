@@ -1,7 +1,7 @@
 package extension
 
 import (
-	"strings"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,6 +17,6 @@ func TestFindFileMatches(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(matches))
-		assert.True(t, strings.HasSuffix(matches[0], "go.mod"))
+		assert.Equal(t, "go.mod", filepath.Base(matches[0]))
 	})
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"html/template"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
@@ -38,24 +39,26 @@ type service struct {
 func (s *service) findFileMatches(root string, patterns []string) ([]string, error) {
 	var matches []string
 
-	files, err := ioutil.ReadDir(root)
-	if err != nil {
-		return nil, err
-	}
+	e := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		log.Debug().Err(err).Str("path", path).Bool("isDir", info.IsDir()).Msg("filepath.Walk")
+		if err == nil {
+			if info.IsDir() {
+				return nil
+			}
 
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-		path := file.Name()
-
-		for _, pattern := range patterns {
-			if matched, err := filepath.Match(pattern, path); err != nil {
-				return nil, err
-			} else if matched {
-				matches = append(matches, path)
+			for _, pattern := range patterns {
+				if matched, err := filepath.Match(pattern, info.Name()); err != nil {
+					return err
+				} else if matched {
+					matches = append(matches, path)
+				}
 			}
 		}
+
+		return nil
+	})
+	if e != nil {
+		return nil, e
 	}
 
 	return matches, nil
@@ -180,7 +183,10 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 	}
 
 	for _, path := range matches {
-		if !foundation.FileExists(filepath.Join(filepath.Dir(path), "package-lock.json")) {
+		packageLockPath := filepath.Join(filepath.Dir(path), "package-lock.json")
+		log.Debug().Msgf("Checking if %v exists", packageLockPath)
+
+		if !foundation.FileExists(packageLockPath) {
 			innerErr := foundation.RunCommandInDirectoryExtended(ctx, filepath.Dir(path), "npm i")
 			if innerErr != nil {
 				return innerErr
