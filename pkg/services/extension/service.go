@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/estafette/estafette-extension-snyk/pkg/api"
 	"github.com/estafette/estafette-extension-snyk/pkg/clients/credentials"
@@ -36,7 +37,7 @@ type service struct {
 	snykcliClient     snykcli.Client
 }
 
-func (s *service) findFileMatches(root string, patterns []string) ([]string, error) {
+func (s *service) findFileMatches(root string, filenamePatterns []string, excludeDirectories []string) ([]string, error) {
 	var matches []string
 
 	e := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
@@ -45,8 +46,14 @@ func (s *service) findFileMatches(root string, patterns []string) ([]string, err
 				return nil
 			}
 
-			for _, pattern := range patterns {
-				if matched, err := filepath.Match(pattern, entry.Name()); err != nil {
+			for _, excludeDirectory := range excludeDirectories {
+				if strings.Contains(path, excludeDirectory) {
+					return nil
+				}
+			}
+
+			for _, filenamePattern := range filenamePatterns {
+				if matched, err := filepath.Match(filenamePattern, entry.Name()); err != nil {
 					return err
 				} else if matched {
 					matches = append(matches, path)
@@ -123,7 +130,7 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 }
 
 func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"pom.xml"})
+	matches, err := s.findFileMatches(".", []string{"pom.xml"}, []string{".git"})
 	if err != nil {
 		return
 	}
@@ -172,7 +179,7 @@ func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"package.json"})
+	matches, err := s.findFileMatches(".", []string{"package.json"}, []string{".git", "node_modules"})
 	if err != nil {
 		return
 	}
@@ -197,7 +204,7 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 }
 
 func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"})
+	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, []string{".git"})
 	if err != nil {
 		return
 	}
@@ -217,7 +224,7 @@ func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) preparePip(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"})
+	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, []string{".git"})
 	if err != nil {
 		return
 	}
