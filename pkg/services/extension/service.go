@@ -126,10 +126,10 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 	// 	return
 	// }
 
-	// err = s.preparePip(ctx, flags)
-	// if err != nil {
-	// 	return
-	// }
+	err = s.preparePip(ctx, flags)
+	if err != nil {
+		return
+	}
 
 	return nil
 }
