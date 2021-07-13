@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	ErrSnykFailure            = errors.New("Snyk CLI failed")
 	ErrNoSupportedTargetFiles = errors.New("Could not detect supported target files")
 )
 
@@ -104,6 +105,9 @@ func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command s
 		// 1: action_needed, vulns found
 		// 2: failure, try to re-run command
 		// 3: failure, no supported projects detected
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 2 {
+			return ErrSnykFailure
+		}
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
 			return ErrNoSupportedTargetFiles
 		}
@@ -147,6 +151,9 @@ func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command stri
 		// 1: action_needed, vulns found
 		// 2: failure, try to re-run command
 		// 3: failure, no supported projects detected
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 2 {
+			return ErrSnykFailure
+		}
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 3 {
 			return ErrNoSupportedTargetFiles
 		}

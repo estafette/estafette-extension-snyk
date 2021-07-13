@@ -90,7 +90,7 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
 	err = s.snykcliClient.Monitor(ctx, flags)
 	if err != nil {
-		if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) {
+		if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
 			return nil
 		}
 		return
@@ -98,7 +98,7 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 
 	err = s.snykcliClient.Test(ctx, flags)
 	if err != nil {
-		if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) {
+		if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
 			return nil
 		}
 		return
