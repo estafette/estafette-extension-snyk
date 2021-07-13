@@ -130,7 +130,7 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 }
 
 func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"pom.xml"}, []string{".git"})
+	matches, err := s.findFileMatches(".", []string{"pom.xml"}, []string{".git", "node_modules"})
 	if err != nil {
 		return
 	}
@@ -204,7 +204,7 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 }
 
 func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, []string{".git"})
+	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, []string{".git", "node_modules"})
 	if err != nil {
 		return
 	}
@@ -224,7 +224,7 @@ func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) preparePip(ctx context.Context, flags api.SnykFlags) (err error) {
-	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, []string{".git"})
+	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, []string{".git", "node_modules"})
 	if err != nil {
 		return
 	}
