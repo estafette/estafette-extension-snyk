@@ -92,6 +92,9 @@ func (c *client) monitorCore(ctx context.Context, flags api.SnykFlags, command s
 	if allProjects && len(flags.ExcludeDirectories) > 0 {
 		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
 	}
+	if flags.PruneRepeatedSubdependencies {
+		command += " --prune-repeated-subdependencies"
+	}
 	if flags.Debug {
 		command += " -d"
 	}
@@ -137,6 +140,9 @@ func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command stri
 	}
 	if flags.SeverityThreshold != "" {
 		command += " --severity-threshold=" + flags.SeverityThreshold
+	}
+	if flags.PruneRepeatedSubdependencies {
+		command += " --prune-repeated-subdependencies"
 	}
 	if flags.Debug {
 		command += " -d"

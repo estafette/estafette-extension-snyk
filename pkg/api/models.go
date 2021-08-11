@@ -75,10 +75,11 @@ type Tag struct {
 }
 
 type SnykFlags struct {
-	FailOn             string
-	PackagesFolder     string
-	GroupName          string
-	ExcludeDirectories []string
-	SeverityThreshold  string
-	Debug              bool
+	FailOn                       string
+	PackagesFolder               string
+	GroupName                    string
+	ExcludeDirectories           []string
+	SeverityThreshold            string
+	Debug                        bool
+	PruneRepeatedSubdependencies bool
 }

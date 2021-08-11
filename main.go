@@ -26,12 +26,13 @@ var (
 
 var (
 	// parameters
-	failOn             = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
-	packagesFolder     = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
-	severityThreshold  = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
-	excludeDirectories = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").String()
-	debug              = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
-	scan               = kingpin.Flag("scan", "Scan repository for vulnerabilities.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SCAN").Bool()
+	failOn                       = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
+	packagesFolder               = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
+	severityThreshold            = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
+	excludeDirectories           = kingpin.Flag("exclude", "Exclude directories from scan.").Default("test").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_EXCLUDE").String()
+	pruneRepeatedSubdependencies = kingpin.Flag("prune-repeated-subdependencies", "Prune dependency trees, removing duplicate sub-dependencies. Will still find all vulnerabilities, but potentially not all of the vulnerable paths.").Envar("ESTAFETTE_PRUNE_REPEATED_SUBDEPENDENCIES").Bool()
+	debug                        = kingpin.Flag("debug", "Print debug information.").Envar("ESTAFETTE_EXTENSION_DEBUG").Bool()
+	scan                         = kingpin.Flag("scan", "Scan repository for vulnerabilities.").Default("true").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SCAN").Bool()
 
 	// injected credentials
 	snykAPITokenPath = kingpin.Flag("snyk-api-token-path", "Snyk api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/snyk_api_token.json").String()
@@ -64,12 +65,13 @@ func main() {
 	extensionService := extension.NewService(credentialsClient, snykcliClient)
 
 	flags := api.SnykFlags{
-		FailOn:             *failOn,
-		PackagesFolder:     *packagesFolder,
-		GroupName:          fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
-		SeverityThreshold:  *severityThreshold,
-		ExcludeDirectories: strings.Split(*excludeDirectories, ","),
-		Debug:              *debug,
+		FailOn:                       *failOn,
+		PackagesFolder:               *packagesFolder,
+		GroupName:                    fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
+		SeverityThreshold:            *severityThreshold,
+		ExcludeDirectories:           strings.Split(*excludeDirectories, ","),
+		PruneRepeatedSubdependencies: *pruneRepeatedSubdependencies,
+		Debug:                        *debug,
 	}
 
 	err = extensionService.Run(ctx, flags)
