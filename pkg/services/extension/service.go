@@ -18,7 +18,8 @@ import (
 )
 
 var (
-	ErrStatusTooLow = errors.New("Returned status is too low")
+	ErrStatusTooLow               = errors.New("Returned status is too low")
+	directoresToSkipInPrepareScan = []string{".git", "node_modules", ".sonarqube"}
 )
 
 type Service interface {
@@ -135,7 +136,7 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 }
 
 func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
 
 	matches, err := s.findFileMatches(".", []string{"pom.xml"}, skipDirectories)
 	if err != nil {
@@ -186,7 +187,7 @@ func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
 
 	matches, err := s.findFileMatches(".", []string{"package.json"}, skipDirectories)
 	if err != nil {
@@ -213,7 +214,7 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 }
 
 func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
 
 	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, skipDirectories)
 	if err != nil {
@@ -235,7 +236,7 @@ func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) preparePip(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, ".git", "node_modules")
+	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
 
 	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, skipDirectories)
 	if err != nil {
