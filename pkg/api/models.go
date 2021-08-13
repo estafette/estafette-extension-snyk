@@ -74,7 +74,16 @@ type Tag struct {
 	Value string `json:"value,omitempty"`
 }
 
+type Action string
+
+const (
+	ActionBoth    Action = "both"
+	ActionMonitor Action = "monitor"
+	ActionTest    Action = "test"
+)
+
 type SnykFlags struct {
+	Action                       Action
 	FailOn                       string
 	PackagesFolder               string
 	GroupName                    string

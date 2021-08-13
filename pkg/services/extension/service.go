@@ -89,20 +89,41 @@ func (s *service) Run(ctx context.Context, flags api.SnykFlags) (err error) {
 		return
 	}
 
-	err = s.snykcliClient.Monitor(ctx, flags)
-	if err != nil {
-		if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
-			return nil
+	switch flags.Action {
+	case api.ActionMonitor:
+		err = s.snykcliClient.Monitor(ctx, flags)
+		if err != nil {
+			if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
+				return nil
+			}
+			return
 		}
-		return
-	}
 
-	err = s.snykcliClient.Test(ctx, flags)
-	if err != nil {
-		if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
-			return nil
+	case api.ActionTest:
+		err = s.snykcliClient.Test(ctx, flags)
+		if err != nil {
+			if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
+				return nil
+			}
+			return
 		}
-		return
+
+	case api.ActionBoth:
+		err = s.snykcliClient.Monitor(ctx, flags)
+		if err != nil {
+			if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
+				return nil
+			}
+			return
+		}
+
+		err = s.snykcliClient.Test(ctx, flags)
+		if err != nil {
+			if errors.Is(err, snykcli.ErrNoSupportedTargetFiles) || errors.Is(err, snykcli.ErrSnykFailure) {
+				return nil
+			}
+			return
+		}
 	}
 
 	return nil

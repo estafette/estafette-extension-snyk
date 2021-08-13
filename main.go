@@ -26,6 +26,7 @@ var (
 
 var (
 	// parameters
+	action                       = kingpin.Flag("Action", "Monitor, test or both.").Default("both").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_ACTION").String()
 	failOn                       = kingpin.Flag("fail-on", "Fail on all|upgradable|patchable.").Default("all").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_FAIL_ON").Enum("all", "upgradable", "patchable")
 	packagesFolder               = kingpin.Flag("packages-folder", "This is the folder in which your dependencies are installed.").Envar("ESTAFETTE_EXTENSION_PACKAGES_FOLDER").String()
 	severityThreshold            = kingpin.Flag("severity-threshold", "The minimum severity to fail on.").Default("high").OverrideDefaultFromEnvar("ESTAFETTE_EXTENSION_SEVERITY_THRESHOLD").Enum("low", "medium", "high")
@@ -65,6 +66,7 @@ func main() {
 	extensionService := extension.NewService(credentialsClient, snykcliClient)
 
 	flags := api.SnykFlags{
+		Action:                       api.Action(*action),
 		FailOn:                       *failOn,
 		PackagesFolder:               *packagesFolder,
 		GroupName:                    fmt.Sprintf("%v/%v/%v", os.Getenv("ESTAFETTE_GIT_SOURCE"), os.Getenv("ESTAFETTE_GIT_OWNER"), os.Getenv("ESTAFETTE_GIT_NAME")),
