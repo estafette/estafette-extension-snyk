@@ -33,8 +33,17 @@ stages:
     - settings.xml
 
   test:
-    image: extensions/snyk:${ESTAFETTE_BUILD_VERSION}
-    minValue: 5
+    parallelStages:
+      test-both:
+        image: extensions/snyk:${ESTAFETTE_BUILD_VERSION}
+
+      test-test:
+        image: extensions/snyk:${ESTAFETTE_BUILD_VERSION}
+        action: test
+
+      test-monitor:
+        image: extensions/snyk:${ESTAFETTE_BUILD_VERSION}
+        action: monitor
 
   push-to-docker-hub:
     image: extensions/docker:dev
