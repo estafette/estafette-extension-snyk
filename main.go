@@ -44,6 +44,13 @@ func main() {
 	// parse command line parameters
 	kingpin.Parse()
 
+	// set debug level
+	if *debug {
+		os.Setenv("ESTAFETTE_LOG_LEVEL", "DEBUG")
+	} else {
+		os.Setenv("ESTAFETTE_LOG_LEVEL", "INFO")
+	}
+
 	// init log format from envvar ESTAFETTE_LOG_FORMAT
 	foundation.InitLoggingFromEnv(foundation.NewApplicationInfo(appgroup, app, version, branch, revision, buildDate))
 
