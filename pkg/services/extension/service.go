@@ -18,8 +18,7 @@ import (
 )
 
 var (
-	ErrStatusTooLow               = errors.New("Returned status is too low")
-	directoresToSkipInPrepareScan = []string{".git", "node_modules", ".sonarqube", ".go", "dist", "build"}
+	ErrStatusTooLow = errors.New("Returned status is too low")
 )
 
 type Service interface {
@@ -157,9 +156,7 @@ func (s *service) prepare(ctx context.Context, flags api.SnykFlags) (err error) 
 }
 
 func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
-
-	matches, err := s.findFileMatches(".", []string{"pom.xml"}, skipDirectories)
+	matches, err := s.findFileMatches(".", []string{"pom.xml"}, flags.ExcludeDirectories)
 	if err != nil {
 		return
 	}
@@ -208,9 +205,7 @@ func (s *service) prepareMaven(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
-
-	matches, err := s.findFileMatches(".", []string{"package.json"}, skipDirectories)
+	matches, err := s.findFileMatches(".", []string{"package.json"}, flags.ExcludeDirectories)
 	if err != nil {
 		return
 	}
@@ -235,9 +230,7 @@ func (s *service) prepareNpm(ctx context.Context, flags api.SnykFlags) (err erro
 }
 
 func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
-
-	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, skipDirectories)
+	matches, err := s.findFileMatches(".", []string{"*.sln", "project.assets.json", "packages.config", "project.json"}, flags.ExcludeDirectories)
 	if err != nil {
 		return
 	}
@@ -257,9 +250,7 @@ func (s *service) prepareNuget(ctx context.Context, flags api.SnykFlags) (err er
 }
 
 func (s *service) preparePip(ctx context.Context, flags api.SnykFlags) (err error) {
-	skipDirectories := append(flags.ExcludeDirectories, directoresToSkipInPrepareScan...)
-
-	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, skipDirectories)
+	matches, err := s.findFileMatches(".", []string{"requirements.txt", "Pipfile", "setup.py"}, flags.ExcludeDirectories)
 	if err != nil {
 		return
 	}
