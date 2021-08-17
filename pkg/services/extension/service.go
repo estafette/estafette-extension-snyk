@@ -19,7 +19,7 @@ import (
 
 var (
 	ErrStatusTooLow               = errors.New("Returned status is too low")
-	directoresToSkipInPrepareScan = []string{".git", "node_modules", ".sonarqube", ".go"}
+	directoresToSkipInPrepareScan = []string{".git", "node_modules", ".sonarqube", ".go", "dist", "build"}
 )
 
 type Service interface {
