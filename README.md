@@ -2,6 +2,7 @@
 
 This Estafette extension checks whether the running pipeline repository has any known vulnerabilities leveraging the Snyk CLI.
 
+
 ## Parameters
 
 | Parameter            | Description                                                 | Allowed values                   | Default value                                  |
@@ -14,6 +15,12 @@ This Estafette extension checks whether the running pipeline repository has any 
 | `packagesFolder`     | Custom path to packages folder.                             | string                           |                                                |
 | `projectName`        | Specify a custom Snyk project name.                         | string                           | `${ESTAFETTE_GIT_OWNER}/${ESTAFETTE_GIT_NAME}` |
 | `severityThreshold`  | Only report vulnerabilities of provided level or higher.    | `low`, `medium`, `high`          | `high`                                         |
+
+## Version
+The pipeline will always fetch the latest version of snyk. If you want to override the version then we can do the following in the dockerfile
+```yaml
+npm install -g snyk@<version_no>
+```
 
 ## Usage
 
