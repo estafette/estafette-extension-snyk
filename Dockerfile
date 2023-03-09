@@ -40,7 +40,7 @@ RUN echo "go:" \
 
 LABEL maintainer="estafette.io"
 
-RUN npm install -g snyk \
+RUN npm install --unsafe-perm -g snyk \
     && snyk --version
 
 COPY ${ESTAFETTE_GIT_NAME} /
