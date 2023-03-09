@@ -14,7 +14,7 @@ RUN mkdir -p /usr/share/man/man1 \
       liblz4-1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && https://go.dev/dl/go1.20.2.linux-amd64.tar.gz --output go.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tar.gz && rm -rf go.tar.gz \
+    && curl -L https://go.dev/dl/go1.20.2.linux-amd64.tar.gz --output go.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go.tar.gz && rm -rf go.tar.gz \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
     && pip install -U pip \
     && pip install --upgrade setuptools
