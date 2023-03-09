@@ -6,7 +6,6 @@ RUN mkdir -p /usr/share/man/man1 \
     && apt-get install -y --no-install-recommends \
       git \
       nodejs \
-      npm \
       maven \
       python3-dev \
       python3-pip \
