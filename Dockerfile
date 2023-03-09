@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0
 
 RUN mkdir -p /usr/share/man/man1 \
     && apt-get update \
+    && apt upgrade -y \
     && curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
     && apt-get install -y --no-install-recommends \
       git \
@@ -18,6 +19,8 @@ RUN mkdir -p /usr/share/man/man1 \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
     && pip install -U pip \
     && pip install --upgrade setuptools
+
+ENV PATH="${PATH}:/usr/local/go/bin"
 
 RUN echo "go:\n\t$(go version)" \
     && echo "node:\n\t$(node --version)" \
