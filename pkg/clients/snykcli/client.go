@@ -127,7 +127,7 @@ func (c *client) testCore(ctx context.Context, flags api.SnykFlags, command stri
 		command += " --remote-repo-url=" + flags.GroupName
 	}
 	if allProjects {
-		command += " --all-projects"
+		command += " --all-projects --detection-depth=2"
 	}
 	if allProjects && len(flags.ExcludeDirectories) > 0 {
 		command += " --exclude=" + strings.Join(flags.ExcludeDirectories, ",")
