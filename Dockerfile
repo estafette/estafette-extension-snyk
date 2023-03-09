@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0
+FROM mcr.microsoft.com/dotnet/sdk:8.0
 
 RUN mkdir -p /usr/share/man/man1 \
     && apt-get update \
@@ -28,7 +28,7 @@ RUN echo "go:\n\t$(go version)" \
     && echo "java:\n\t$(java --version)" \
     && echo "mvn:\n\t$(mvn --version)" \
     && echo "dotnet:\n\t$(dotnet --version)" \
-    && echo "python:\n\t$(python --version)" \
+    && echo "python:\n\t$(python3 --version)" \
     && echo "pip:\n\t$(pip --version)" \
     && echo "apt list --installed:" \
     && apt list --installed
